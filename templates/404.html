@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block title %}Paper Not Found - PYQ Vault{% endblock %}
+
+{% block content %}
+<div class="card-pastel card-clean-white text-center p-5 mx-auto my-4" style="max-width: 600px;">
+    <div class="avatar-stack-item mx-auto mb-3" style="width: 70px; height: 70px; background: var(--pastel-yellow); color: var(--pastel-yellow-text); font-size: 1.8rem;">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+    </div>
+    <h3 class="fw-bold mb-2">Paper Not Found</h3>
+    <p class="text-secondary small mb-4">
+        This question paper does not exist or was removed when seed data was cleared.
+    </p>
+    <div>
+        <a href="{{ url_for('index') }}" class="btn btn-dark rounded-pill px-4 py-2 fw-semibold">
+            <i class="fa-solid fa-arrow-left me-1"></i> Back to All Papers
+        </a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+
+{% block title %}Question Papers - PYQ Vault{% endblock %}
+
+{% block content %}
+<div class="py-2">
+
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <div>
+            <h3 class="fw-bold mb-1 d-flex align-items-center gap-2">
+                <span>Question Papers</span>
+                <span class="badge rounded-pill bg-dark text-white fs-6 fw-bold" id="displayedCount">{{ papers|length }}</span>
+            </h3>
+            <p class="text-secondary small mb-0">Browse past exam papers and community solutions.</p>
+        </div>
+
+        <div class="d-flex align-items-center gap-2 overflow-auto pb-1">
+            <a href="{{ url_for('index') }}" class="filter-pill-btn {% if not selected_exam %}active{% endif %}">
+                All
+            </a>
+            <a href="{{ url_for('index', exam_type='CT1') }}" class="filter-pill-btn {% if selected_exam == 'CT1' %}active{% endif %}">
+                CT1
+            </a>
+            <a href="{{ url_for('index', exam_type='CT2') }}" class="filter-pill-btn {% if selected_exam == 'CT2' %}active{% endif %}">
+                CT2
+            </a>
+            <a href="{{ url_for('index', exam_type='End Sem') }}" class="filter-pill-btn {% if selected_exam == 'End Sem' %}active{% endif %}">
+                End Sem
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4" id="papersGrid">
+        {% if papers %}
+            {% for paper in papers %}
+                {% set color_classes = ['card-mint', 'card-pink', 'card-yellow', 'card-lavender', 'card-blue'] %}
+                {% set card_color = color_classes[loop.index0 % 5] %}
+
+                <div class="col-sm-6 col-lg-4 paper-card-item" data-course="{{ paper.course|lower }}" data-year="{{ paper.year }}" data-exam="{{ paper.exam_type|lower }}">
+                    <div class="card-pastel {{ card_color }} paper-box-card h-100">
+
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <span class="card-top-pill">
+                                <i class="fa-regular fa-calendar me-1"></i>{{ paper.year }} &bull; {{ paper.exam_type }}
+                            </span>
+                            <span class="badge bg-white bg-opacity-75 text-dark rounded-pill px-2.5 py-1 small fw-bold">
+                                {{ paper.page_count }} {{ 'Page' if paper.page_count == 1 else 'Pages' }}
+                            </span>
+                        </div>
+
+                        <div class="my-2 flex-grow-1">
+                            <h4 class="paper-title text-dark">
+                                <a href="{{ url_for('paper_detail', paper_id=paper.id) }}" class="text-dark text-decoration-none">
+                                    {{ paper.course }}
+                                </a>
+                            </h4>
+                            <div class="d-flex align-items-center gap-3 text-secondary small mt-2">
+                                <span>
+                                    <i class="fa-solid fa-lightbulb me-1 {% if paper.solution_count > 0 %}text-success{% else %}text-muted{% endif %}"></i>
+                                    <strong>{{ paper.solution_count }}</strong> {{ 'Solution' if paper.solution_count == 1 else 'Solutions' }}
+                                </span>
+                                <span>
+                                    <i class="fa-regular fa-clock me-1"></i>
+                                    {{ paper.upload_date.strftime('%b %Y') if paper.upload_date else 'Recent' }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center justify-content-between pt-3 mt-auto border-top border-dark border-opacity-10">
+                            <a href="{{ url_for('paper_detail', paper_id=paper.id) }}" class="fw-bold text-dark small text-decoration-none">
+                                View pages & solutions
+                            </a>
+                            <a href="{{ url_for('paper_detail', paper_id=paper.id) }}" class="btn-arrow-diagonal" title="Open Paper">
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+
+            <div class="col-12">
+                <div class="card-pastel card-clean-white text-center p-5 mx-auto" style="max-width: 640px;">
+                    <div class="avatar-stack-item mx-auto mb-3" style="width: 68px; height: 68px; background: var(--pastel-mint); color: var(--pastel-mint-text); font-size: 1.6rem;">
+                        <i class="fa-solid fa-folder-open"></i>
+                    </div>
+                    <h4 class="fw-bold mb-2">No Question Papers Yet</h4>
+                    <p class="text-secondary small mb-0">
+                        Use the <strong>"Upload Paper"</strong> button at the top right to add your first previous year question paper.
+                    </p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <div id="noLiveSearchResults" class="card-pastel card-clean-white text-center p-5 d-none my-3 mx-auto" style="max-width: 640px;">
+        <div class="avatar-stack-item mx-auto mb-3" style="width: 58px; height: 58px; background: var(--pastel-pink); color: var(--pastel-pink-text); font-size: 1.3rem;">
+            <i class="fa-solid fa-magnifying-glass"></i>
+        </div>
+        <h5 class="fw-bold mb-1">No Matching Papers</h5>
+        <p class="text-secondary small mb-0" id="liveSearchQueryEcho">Try searching for a different course name.</p>
+    </div>
+</div>
+{% endblock %}
