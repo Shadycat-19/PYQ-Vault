@@ -233,59 +233,81 @@ def create_app(test_config=None):
         return redirect(url_for('paper_detail', paper_id=new_paper.id))
 
     @app.route('/paper/<int:paper_id>/solution/upload', methods=['POST'])
+
     def upload_solution(paper_id):
         paper = db.get_or_404(Paper, paper_id)
-        contributor = request.form.get('contributor', '').strip() or 'Community Contributor'
+
+        contributor = (
+            request.form.get('contributor', '').strip()
+            or 'Community Contributor'
+        )
         notes = request.form.get('notes', '').strip()
-        text_content = request.form.get('text_content', '').strip()
 
         uploaded_files = request.files.getlist('solution_files')
-        valid_files = [f for f in uploaded_files if f and f.filename and allowed_file(f.filename)]
 
-        if not valid_files and not text_content:
-            flash('Please upload solution page images or type out your solution answers.', 'danger')
+    
+        valid_files = [
+            file for file in uploaded_files
+            if file and file.filename and allowed_file(file.filename)
+        ]
+
+    
+        if not valid_files:
+            flash(
+                'Please upload at least one valid handwritten solution image.',
+                'danger'
+            )
             return redirect(url_for('paper_detail', paper_id=paper.id))
 
-        if valid_files and text_content:
-            actual_type = 'both'
-        elif text_content:
-            actual_type = 'text'
-        else:
-            actual_type = 'images'
-
+   
         new_solution = Solution(
             paper_id=paper.id,
             contributor=contributor,
             notes=notes,
-            solution_type=actual_type,
-            text_content=text_content if text_content else None,
+            solution_type='images',
             upload_date=datetime.utcnow()
         )
+
         db.session.add(new_solution)
         db.session.flush()
 
+    
         for idx, file in enumerate(valid_files, start=1):
             original_ext = file.filename.rsplit('.', 1)[1].lower()
-            unique_filename = f"sol_{new_solution.id}_p{idx}_{uuid.uuid4().hex[:8]}.{original_ext}"
-            file_path = os.path.join(app.config['SOLUTIONS_UPLOAD_DIR'], unique_filename)
+
+            unique_filename = (
+                f"sol_{new_solution.id}_p{idx}_"
+                f"{uuid.uuid4().hex[:8]}.{original_ext}"
+            )
+
+            file_path = os.path.join(
+                app.config['SOLUTIONS_UPLOAD_DIR'],
+                unique_filename
+            )
+
             file.save(file_path)
 
             rel_path = f"uploads/solutions/{unique_filename}"
+
             solution_page = SolutionPage(
                 solution_id=new_solution.id,
                 file_path=rel_path,
                 page_number=idx
             )
+
             db.session.add(solution_page)
 
         db.session.commit()
-        if actual_type == 'text':
-            flash("Typed solution submitted successfully! Thank you for contributing.", 'success')
-        elif actual_type == 'both':
-            flash(f"Comprehensive solution (typed answers + {len(valid_files)} image pages) submitted successfully!", 'success')
-        else:
-            flash(f"Solution with {len(valid_files)} page(s) submitted successfully!", 'success')
-        return redirect(url_for('paper_detail', paper_id=paper.id) + '#solutions')
+
+        flash(
+            f'Handwritten solution with {len(valid_files)} '
+            f'page(s) submitted successfully!',
+            'success'
+        )
+
+        return redirect(
+            url_for('paper_detail', paper_id=paper.id) + '#solutions'
+        )
 
     @app.route('/paper/<int:paper_id>/delete', methods=['POST'])
     def delete_paper(paper_id):
