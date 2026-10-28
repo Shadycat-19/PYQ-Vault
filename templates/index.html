@@ -58,14 +58,10 @@
                                     {{ paper.course }}
                                 </a>
                             </h4>
-                            <div class="d-flex align-items-center gap-3 text-secondary small mt-2.5">
+                            <div class="d-flex align-items-center gap-3 text-secondary small mt-2">
                                 <span class="d-flex align-items-center gap-1.5">
                                     <i class="fa-solid fa-lightbulb {% if paper.solution_count > 0 %}text-success{% else %}text-muted{% endif %}"></i>
                                     <strong>{{ paper.solution_count }}</strong> {{ 'Solution' if paper.solution_count == 1 else 'Solutions' }}
-                                </span>
-                                <span class="d-flex align-items-center gap-1.5" title="Uploaded on {{ paper.upload_date.strftime('%b %d, %Y') if paper.upload_date else '' }}">
-                                    <i class="fa-solid fa-cloud-arrow-up text-secondary"></i>
-                                    Uploaded {{ paper.upload_date.strftime('%Y') if paper.upload_date else 'Recent' }}
                                 </span>
                             </div>
                         </div>
