@@ -2,33 +2,26 @@
 
 {% block title %}Question Papers - PYQ Vault{% endblock %}
 
+{% block page_heading %}
+<span>Question Papers</span>
+<span class="badge rounded-pill bg-dark text-white fs-6 fw-bold ms-1" id="displayedCount">{{ papers|length }}</span>
+{% endblock %}
+
 {% block content %}
-<div class="py-2">
+<div class="py-1">
 
-    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
-        <div>
-            <h3 class="fw-bold mb-1 d-flex align-items-center gap-2">
-                <span>Question Papers</span>
-                <span class="badge rounded-pill bg-dark text-white fs-6 fw-bold" id="displayedCount">{{ papers|length }}</span>
-            </h3>
-            <p class="text-secondary small mb-0">Browse past exam papers and community solutions.</p>
+    {% if selected_exam or selected_year %}
+    <div class="active-filters-bar d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4 p-3 bg-white rounded-4 border shadow-2xs">
+        <div class="d-flex align-items-center gap-2 small">
+            <span class="text-secondary fw-semibold">Active Filter:</span>
+            {% if selected_exam %}<span class="badge bg-dark text-white rounded-pill px-3 py-1.5">{{ selected_exam }}</span>{% endif %}
+            {% if selected_year %}<span class="badge bg-light text-dark border rounded-pill px-3 py-1.5">Exam {{ selected_year }}</span>{% endif %}
         </div>
-
-        <div class="d-flex align-items-center gap-2 overflow-auto pb-1">
-            <a href="{{ url_for('index') }}" class="filter-pill-btn {% if not selected_exam %}active{% endif %}">
-                All
-            </a>
-            <a href="{{ url_for('index', exam_type='CT1') }}" class="filter-pill-btn {% if selected_exam == 'CT1' %}active{% endif %}">
-                CT1
-            </a>
-            <a href="{{ url_for('index', exam_type='CT2') }}" class="filter-pill-btn {% if selected_exam == 'CT2' %}active{% endif %}">
-                CT2
-            </a>
-            <a href="{{ url_for('index', exam_type='End Sem') }}" class="filter-pill-btn {% if selected_exam == 'End Sem' %}active{% endif %}">
-                End Sem
-            </a>
-        </div>
+        <a href="{{ url_for('index') }}" class="btn btn-sm btn-link text-danger text-decoration-none fw-semibold p-0">
+            <i class="fa-solid fa-xmark me-1"></i>Reset filters
+        </a>
     </div>
+    {% endif %}
 
     <div class="row g-4" id="papersGrid">
         {% if papers %}
@@ -36,43 +29,52 @@
                 {% set color_classes = ['card-mint', 'card-pink', 'card-yellow', 'card-lavender', 'card-blue'] %}
                 {% set card_color = color_classes[loop.index0 % 5] %}
 
-                <div class="col-sm-6 col-lg-4 paper-card-item" data-course="{{ paper.course|lower }}" data-year="{{ paper.year }}" data-exam="{{ paper.exam_type|lower }}">
-                    <div class="card-pastel {{ card_color }} paper-box-card h-100">
+                <div class="col-sm-6 col-lg-4 paper-card-item" data-course="{{ paper.course|lower }}" data-year="{{ paper.year }}" data-upload-year="{{ paper.upload_date.strftime('%Y') if paper.upload_date else '' }}" data-exam="{{ paper.exam_type|lower }}">
+                    <div class="card-pastel {{ card_color }} paper-minimal-card h-100">
 
                         <div class="d-flex align-items-center justify-content-between mb-3">
                             <span class="card-top-pill">
                                 <i class="fa-regular fa-calendar me-1"></i>{{ paper.year }} &bull; {{ paper.exam_type }}
                             </span>
-                            <span class="badge bg-white bg-opacity-75 text-dark rounded-pill px-2.5 py-1 small fw-bold">
-                                {{ paper.page_count }} {{ 'Page' if paper.page_count == 1 else 'Pages' }}
-                            </span>
+                            <div class="d-flex align-items-center gap-1.5">
+                                {% if paper.file_type == 'pdf' or (paper.original_file_path and paper.original_file_path.endswith('.pdf')) %}
+                                    <span class="badge bg-danger bg-opacity-75 text-white rounded-pill px-2 py-1 smaller fw-bold" title="Original PDF available">
+                                        <i class="fa-solid fa-file-pdf"></i> PDF
+                                    </span>
+                                {% elif paper.file_type == 'docx' or (paper.original_file_path and paper.original_file_path.endswith('.docx')) %}
+                                    <span class="badge bg-primary bg-opacity-75 text-white rounded-pill px-2 py-1 smaller fw-bold" title="Original Word doc available">
+                                        <i class="fa-solid fa-file-word"></i> DOCX
+                                    </span>
+                                {% endif %}
+                                <span class="badge bg-white bg-opacity-80 text-dark rounded-pill px-2.5 py-1 small fw-bold">
+                                    {{ paper.page_count }} {{ 'Page' if paper.page_count == 1 else 'Pages' }}
+                                </span>
+                            </div>
                         </div>
 
                         <div class="my-2 flex-grow-1">
-                            <h4 class="paper-title text-dark">
-                                <a href="{{ url_for('paper_detail', paper_id=paper.id) }}" class="text-dark text-decoration-none">
+                            <h4 class="paper-card-title text-dark">
+                                <a href="{{ url_for('paper_detail', paper_id=paper.id) }}" class="stretched-link text-dark text-decoration-none">
                                     {{ paper.course }}
                                 </a>
                             </h4>
-                            <div class="d-flex align-items-center gap-3 text-secondary small mt-2">
-                                <span>
-                                    <i class="fa-solid fa-lightbulb me-1 {% if paper.solution_count > 0 %}text-success{% else %}text-muted{% endif %}"></i>
+                            <div class="d-flex align-items-center gap-3 text-secondary small mt-2.5">
+                                <span class="d-flex align-items-center gap-1.5">
+                                    <i class="fa-solid fa-lightbulb {% if paper.solution_count > 0 %}text-success{% else %}text-muted{% endif %}"></i>
                                     <strong>{{ paper.solution_count }}</strong> {{ 'Solution' if paper.solution_count == 1 else 'Solutions' }}
                                 </span>
-                                <span>
-                                    <i class="fa-regular fa-clock me-1"></i>
-                                    {{ paper.upload_date.strftime('%b %Y') if paper.upload_date else 'Recent' }}
+                                <span class="d-flex align-items-center gap-1.5" title="Uploaded on {{ paper.upload_date.strftime('%b %d, %Y') if paper.upload_date else '' }}">
+                                    <i class="fa-solid fa-cloud-arrow-up text-secondary"></i>
+                                    Uploaded {{ paper.upload_date.strftime('%Y') if paper.upload_date else 'Recent' }}
                                 </span>
                             </div>
                         </div>
 
                         <div class="d-flex align-items-center justify-content-between pt-3 mt-auto border-top border-dark border-opacity-10">
-                            <a href="{{ url_for('paper_detail', paper_id=paper.id) }}" class="fw-bold text-dark small text-decoration-none">
-                                View pages & solutions
-                            </a>
-                            <a href="{{ url_for('paper_detail', paper_id=paper.id) }}" class="btn-arrow-diagonal" title="Open Paper">
-                                <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                            </a>
+                            <span class="fw-bold text-dark small">View Paper &amp; Solutions</span>
+                            <span class="paper-card-arrow">
+                                <i class="fa-solid fa-arrow-right"></i>
+                            </span>
                         </div>
                     </div>
                 </div>

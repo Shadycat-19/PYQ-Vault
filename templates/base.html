@@ -20,31 +20,97 @@
 
     <div class="app-shell">
 
-        <aside class="sidebar-dock">
+        <!-- Decluttered & Organized Modern Sidebar -->
+        <aside class="app-sidebar">
+            <div class="sidebar-brand-header mb-4">
+                <a href="{{ url_for('index') }}" class="d-flex align-items-center gap-2 text-decoration-none">
+                    <div class="brand-logo-circle">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                    </div>
+                    <span class="brand-title">PYQ Vault</span>
+                </a>
+            </div>
 
-            <a href="{{ url_for('index') }}" class="dock-brand-logo" title="PYQ Vault">
-                <i class="fa-solid fa-graduation-cap"></i>
-            </a>
+            <div class="sidebar-scrollable-content">
+                <!-- Navigation -->
+                <div class="sidebar-group mb-3">
+                    <div class="sidebar-group-title">LIBRARY</div>
+                    <a href="{{ url_for('index') }}" class="sidebar-nav-item {% if not selected_exam and not selected_year %}active{% endif %}">
+                        <i class="fa-solid fa-book-bookmark"></i>
+                        <span class="flex-grow-1">All Papers</span>
+                        <span class="sidebar-badge">{{ global_total_papers }}</span>
+                    </a>
+                </div>
 
-            <div class="dock-nav-items">
-                <button type="button" class="dock-btn guidelines-toggle" data-bs-toggle="modal" data-bs-target="#imageGuidelinesModal" title="Image Upload Guidelines">
-                    <i class="fa-solid fa-circle-info"></i>
-                </button>
+                <!-- Exam Types -->
+                <div class="sidebar-group mb-3">
+                    <div class="sidebar-group-title">EXAM TYPE</div>
+                    <div class="sidebar-links-list">
+                        <a href="{{ url_for('index') }}" class="sidebar-nav-item {% if not selected_exam %}active{% endif %}">
+                            <span class="exam-status-dot dot-all"></span>
+                            <span>All Exams</span>
+                        </a>
+                        <a href="{{ url_for('index', exam_type='CT1', year=selected_year) }}" class="sidebar-nav-item {% if selected_exam == 'CT1' %}active{% endif %}">
+                            <span class="exam-status-dot dot-ct1"></span>
+                            <span>CT 1</span>
+                        </a>
+                        <a href="{{ url_for('index', exam_type='CT2', year=selected_year) }}" class="sidebar-nav-item {% if selected_exam == 'CT2' %}active{% endif %}">
+                            <span class="exam-status-dot dot-ct2"></span>
+                            <span>CT 2</span>
+                        </a>
+                        <a href="{{ url_for('index', exam_type='End Sem', year=selected_year) }}" class="sidebar-nav-item {% if selected_exam == 'End Sem' %}active{% endif %}">
+                            <span class="exam-status-dot dot-endsem"></span>
+                            <span>End Sem</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="sidebar-group mb-3">
+                    <div class="sidebar-group-title">FILTER BY EXAM YEAR</div>
+                    <div>
+                        <select id="examYearSelect" class="form-select form-select-sm sidebar-select">
+                            <option value="">All Exam Years</option>
+                            {% for y in global_exam_years %}
+                                <option value="{{ y }}" {% if selected_year == y|string %}selected{% endif %}>Exam {{ y }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Resources & Tools -->
+                <div class="sidebar-group mb-2">
+                    <div class="sidebar-group-title">RESOURCES</div>
+                    <div class="sidebar-links-list">
+                        <button type="button" class="sidebar-nav-item border-0 bg-transparent w-100 text-start" data-bs-toggle="modal" data-bs-target="#courseBundlesModal">
+                            <i class="fa-solid fa-box-archive text-primary"></i>
+                            <span class="flex-grow-1">Course Bundles</span>
+                            <span class="sidebar-badge">{{ global_courses|length }}</span>
+                        </button>
+                        <button type="button" class="sidebar-nav-item border-0 bg-transparent w-100 text-start guidelines-toggle" data-bs-toggle="modal" data-bs-target="#imageGuidelinesModal">
+                            <i class="fa-regular fa-circle-question text-secondary"></i>
+                            <span class="flex-grow-1">Upload Guidelines</span>
+                        </button>
+                    </div>
+                </div>
             </div>
         </aside>
 
         <div class="app-main-body">
 
             <header class="app-topbar mb-3">
-                <div class="welcome-title-group">
-                    <p class="mb-0 text-secondary fw-medium fs-6">Access question papers, semester solutions, and exam preparation resources.</p>
+                <div class="topbar-left-section">
+                    <div class="d-flex align-items-center gap-2">
+                        {% block page_heading %}
+                        <span class="fw-bold text-dark fs-5">Repository</span>
+                        {% endblock %}
+                    </div>
                 </div>
 
                 <div class="topbar-right-controls">
-
                     <div class="search-pill-box">
                         <i class="fa-solid fa-magnifying-glass text-secondary"></i>
-                        <input type="text" id="liveSearchInput" placeholder="Search course, code, or topic..." autocomplete="off">
+                        <input type="text" id="liveSearchInput" placeholder="Search course, code, or topic" autocomplete="off">
                     </div>
 
                     <button class="btn-upload-pastel" data-bs-toggle="modal" data-bs-target="#uploadPaperModal">
@@ -126,18 +192,18 @@
 
                         <div class="mb-4">
                             <label class="form-label fw-bold small text-secondary d-flex justify-content-between align-items-center">
-                                <span>Question Paper Pages (PNG, JPG, WEBP) *</span>
-                                <span class="badge rounded-pill bg-light text-dark border px-3" id="fileCountBadge">0 pages</span>
+                                <span>Question Paper Files (PDF, DOCX, TXT, or Images) *</span>
+                                <span class="badge rounded-pill bg-light text-dark border px-3" id="fileCountBadge">0 files</span>
                             </label>
 
                             <div class="drop-zone-pastel position-relative" id="paperDropZone">
-                                <input type="file" id="paperFileInput" name="paper_files" class="position-absolute top-0 start-0 w-100 h-100 opacity-0 cursor-pointer" multiple accept="image/png, image/jpeg, image/webp" required>
+                                <input type="file" id="paperFileInput" name="paper_files" class="position-absolute top-0 start-0 w-100 h-100 opacity-0 cursor-pointer" multiple accept=".pdf, .docx, .doc, .txt, image/png, image/jpeg, image/webp" required>
                                 <div class="py-2">
                                     <div class="avatar-stack-item mx-auto mb-2" style="width: 48px; height: 48px; background: #ffffff;">
                                         <i class="fa-solid fa-cloud-arrow-up fs-5 text-dark"></i>
                                     </div>
-                                    <div class="fw-bold mb-1">Select or drag & drop question paper pages</div>
-                                    <div class="text-muted small">You can reorder pages below before final submission.</div>
+                                    <div class="fw-bold mb-1">Select or drag & drop question paper (PDF, DOCX, TXT, Images)</div>
+                                    <div class="text-muted small">PDF & Word docs are auto-converted into viewable pages and can be downloaded in original format.</div>
                                 </div>
                             </div>
                         </div>
@@ -152,7 +218,7 @@
                     </div>
 
                     <div class="modal-footer bg-light border-0 px-4 py-3">
-                        <button type="button" class="btn btn-light rounded-pill px-4 fw-semibold" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-light rounded-pill px-4 fw-semibold" data-bs-dismiss="modal">Cancel</button>   
                         <button type="button" class="btn btn-dark rounded-pill px-4 fw-bold" id="submitPaperBtn">Upload Paper</button>
                     </div>
                 </form>
@@ -175,6 +241,56 @@
                         <a href="#" id="viewExistingPaperBtn" class="btn btn-outline-dark rounded-pill px-3">View Existing</a>
                         <button type="button" id="proceedAnywayBtn" class="btn btn-dark rounded-pill px-3 fw-bold">Proceed Anyway</button>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Course Bundles Modal -->
+    <div class="modal fade" id="courseBundlesModal" tabindex="-1" aria-labelledby="courseBundlesModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content pastel-modal">
+                <div class="modal-header pastel-header">
+                    <h5 class="modal-title fw-bold d-flex align-items-center gap-2" id="courseBundlesModalLabel">
+                        <span class="avatar-stack-item bg-dark text-white"><i class="fa-solid fa-box-archive small"></i></span>
+                        <span>Download Course Bundles (ZIP)</span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="text-secondary small mb-3">
+                        Download all question papers across all available years for any course bundled into a single ZIP archive.
+                    </p>
+                    <div class="mb-3">
+                        <div class="search-pill-box w-100">
+                            <i class="fa-solid fa-magnifying-glass text-secondary"></i>
+                            <input type="text" id="bundleSearchInput" placeholder="Search course by name..." autocomplete="off">
+                        </div>
+                    </div>
+                    <div class="course-bundles-scroll-area d-flex flex-column gap-2 p-1" style="max-height: 400px; overflow-y: auto; -webkit-overflow-scrolling: touch;">
+                        {% for c in global_courses %}
+                        <div class="p-3 rounded-4 bg-white border d-flex flex-row align-items-center justify-content-between course-bundle-item shadow-2xs" data-course-name="{{ c|lower }}">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="avatar-stack-item bg-light text-dark border" style="width: 38px; height: 38px; font-size: 0.95rem;">
+                                    <i class="fa-solid fa-folder"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-dark fs-6">{{ c }}</div>
+                                    <div class="text-secondary smaller fw-medium">{{ global_course_counts.get(c, 1) }} {{ 'paper' if global_course_counts.get(c, 1) == 1 else 'papers' }} available</div>
+                                </div>
+                            </div>
+                            <a href="{{ url_for('download_course_papers_zip', course_name=c) }}" class="btn btn-sm btn-outline-dark rounded-pill px-3.5 py-1.5 fw-semibold d-inline-flex align-items-center gap-1.5">
+                                <i class="fa-solid fa-download"></i>
+                                <span>Download ZIP</span>
+                            </a>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-4 text-secondary small">No courses available yet.</div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-0 px-4 py-3">
+                    <button type="button" class="btn btn-dark rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
@@ -232,10 +348,10 @@
                         <div class="col-md-6">
                             <div class="card-pastel card-lavender p-3 h-100">
                                 <div class="fw-bold text-dark mb-1 d-flex align-items-center gap-2">
-                                    <i class="fa-solid fa-file-image text-primary"></i> Supported Formats & Borders
+                                    <i class="fa-solid fa-file-lines text-primary"></i> Supported Formats & Documents
                                 </div>
                                 <div class="small text-secondary">
-                                    Supports PNG, JPG, JPEG, and WEBP images. Crop extraneous desks or backgrounds so the paper fills the frame.
+                                    Supports PDF, Word (.docx), text (.txt), and PNG/JPG images. Multi-page PDFs and Word files are automatically rendered into high-res pages.
                                 </div>
                             </div>
                         </div>

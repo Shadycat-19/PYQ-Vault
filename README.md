@@ -4,51 +4,57 @@ A full-stack web application designed for students and educators to share, searc
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 - **Backend**: Flask 3.1, Python 3.9+
 - **Database**: SQLite with Flask-SQLAlchemy (with full ON DELETE CASCADE)
 - **Frontend**: Jinja2 Templating, HTML5, CSS3, Bootstrap 5.3, Font Awesome 6
-- **Imaging & Bundling**: Pillow (PIL), Python `zipfile`
+- **Imaging, Documents & Bundling**: Pillow (PIL), `pypdfium2`, `python-docx`, Python `zipfile`
 
 ---
 
-## 🚀 Key Features
+## Key Features
 
 ### 1. Catalog & Real-time Search
 - **Live Search**: Instant client-side and server-side filtering by course name/code.
-- **Filters**: Dropdowns by **Year** and **Exam Type** (Midsem, Endsem, Quiz, Minor, Class Test) with quick reset.
+- **Filters**: Dropdowns by **Upload Year**, **Exam Year**, and **Exam Type** (CT1, CT2, End Sem) with real-time responsive filtering.
 - **Repository Statistics**: Real-time counter of total papers, community solutions, and indexed courses.
 - **Empty States**: Helpful guidance when no papers or solutions are found.
 
-### 2. Multi-Page Document Viewer
-- **High-Resolution Page Viewer**: Large interactive preview with Page X of Y indicators.
-- **Navigation**: Previous/Next buttons, keyboard navigation (Left/Right arrows), and floating navigation overlay.
-- **Zoom & Fullscreen**: Zoom in (+25%), Zoom out (-25%), Reset, and full-screen modal view.
+### 2. Multi-Page Document & Format Support
+- **PDF, Word (.docx), TXT & Image Uploads**: Upload papers directly as PDF or Word documents or scans/images. PDFs and DOCX are automatically converted into high-resolution viewable page images.
+- **Original & PDF Downloads**: Download original uploaded files (.pdf, .docx, .txt), compiled multi-page PDFs, or individual page images.
+- **High-Resolution Page Viewer**: Large interactive preview with Page X of Y indicators, zoom controls (+25%, -25%, reset), keyboard shortcuts, and full-screen view.
 - **Sidebar Thumbnail Strip**: Fast jumping between pages with active page highlight.
 
-### 3. Solution Sharing & Viewer
-- Community solutions section on each paper.
-- Multi-page solution viewer with dedicated thumbnails.
-- Download individual solution pages or all solution pages as a `.ZIP` archive.
-- Add Solution modal accessible directly from any paper detail page.
+### 3. Categorized Solutions & Simple Text Answers
+- **Grouped by Question Number**: Solutions are neatly categorized by question (e.g. Question 1, Question 2, Full Paper). If a question has multiple answers, they are grouped together for clear comparison.
+- **Quick Question Navigation**: Filter solution tabs by question (`All Questions`, `Q1`, `Q2`...).
+- **Simple Text Answer Upload**: Direct type/paste text answers without needing to scan or upload images. Includes 1-click clipboard copy and `.txt` file download.
+- **Handwritten & Multi-Page Solutions**: Upload handwritten image pages or PDF solutions with page reordering and thumbnail navigation.
 
-### 4. Upload Flows & Duplicate Detection
+### 4. Course Papers Bundle Download
+- **All-Years Course Bundle**: One-click download of all question papers for any course across all available years in a neatly organized `.ZIP` archive with structured folders and manifest.
+
+### 5. Upload Flows & Duplicate Detection
 - **Paper Uploader**:
   - Dynamic course autocomplete suggestions based on existing catalog.
-  - Multi-image file uploader (PNG, JPG, WEBP).
-  - Drag-and-drop support with page sequence reordering (move up/down) and delete before upload.
-  - **Duplicate Detection**: Queries `/api/check-duplicate` before submission. If an identical Course + Year + Exam Type exists, prompts a **Duplicate Warning Modal** with options to view the existing paper, cancel, or proceed anyway.
+  - Multi-format file uploader (PDF, DOCX, TXT, PNG, JPG, WEBP).
+  - Drag-and-drop support with document preview and page sequence reordering.
+  - **Duplicate Detection**: Queries `/api/check-duplicate` before submission with duplicate warning modal.
 - **Solution Uploader**:
-  - Multi-page image upload with reordering and contributor attribution.
+  - Easy toggle between "Type / Paste Text Answer" and "Handwritten Images / PDF".
+  - Quick question number selectors (Q1, Q2, Q3, Q4, Q5, Full Paper).
+  - Contributor attribution and optional notes.
 
-### 5. Downloads & Cascade Deletions
-- Download individual page images.
-- Stream dynamic `.ZIP` archives of full papers and solutions on the fly.
-- Delete paper with cascade delete removing associated pages, solutions, and disk files.
+### 6. Downloads & Cascade Deletions
+- Download original files (.pdf, .docx, .txt) and compiled PDF documents.
+- Download all papers of a course across all years as a single `.ZIP`.
+- Download solution text files or full solution page archives.
+- Delete paper with cascade delete removing associated pages, original files, solutions, and disk files.
 
 ---
 
-## ⚡ Quick Start
+## Quick Start
 
 ### 1. Activate Virtual Environment
 ```bash

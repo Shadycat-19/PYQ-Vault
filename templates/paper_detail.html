@@ -22,7 +22,7 @@ paper.exam_type }} {{ paper.year }}) - PYQ Vault{% endblock %} {% block content
 
   <div class="card-pastel card-clean-white p-4">
     <div class="row align-items-center gy-3">
-      <div class="col-lg-8">
+      <div class="col-lg-7">
         <div class="d-flex align-items-center gap-2 mb-2">
           <span
             class="badge bg-light text-dark rounded-pill px-3 py-1 fw-bold small border"
@@ -40,29 +40,53 @@ paper.exam_type }} {{ paper.year }}) - PYQ Vault{% endblock %} {% block content
             ><i class="fa-regular fa-file-lines me-1 text-primary"></i
             ><strong>{{ paper.page_count }}</strong> Pages</span
           >
-          <span
+          <a href="#solutions" class="text-decoration-none text-secondary"
             ><i class="fa-solid fa-lightbulb me-1 text-success"></i
             ><strong>{{ paper.solution_count }}</strong> Community
-            Solutions</span
+            Solutions</a
           >
         </div>
       </div>
 
-      <div class="col-lg-4 text-lg-end">
-        <div class="d-flex flex-wrap justify-content-lg-end gap-2">
+      <div class="col-lg-5 text-lg-end">
+        <div class="d-flex flex-wrap justify-content-lg-end gap-2 align-items-center">
+          {% if paper.original_file_path and paper.original_file_path.endswith('.docx') %}
+          <a
+            href="{{ url_for('download_original_paper', paper_id=paper.id) }}"
+            class="btn btn-outline-primary rounded-pill px-3 py-2 fw-semibold small"
+            title="Download original Word document"
+          >
+            <i class="fa-solid fa-file-word me-1"></i> DOCX
+          </a>
+          {% endif %}
+          <a
+            href="{{ url_for('download_paper_pdf', paper_id=paper.id) }}"
+            class="btn btn-outline-danger rounded-pill px-3 py-2 fw-semibold small"
+            title="Download question paper as PDF"
+          >
+            <i class="fa-solid fa-file-pdf me-1"></i> PDF
+          </a>
+          <a
+            href="{{ url_for('download_paper_with_solutions_pdf', paper_id=paper.id) }}"
+            class="btn btn-dark rounded-pill px-3 py-2 fw-semibold small shadow-2xs"
+            title="Download Question Paper + all Verified Solutions compiled as a single PDF booklet"
+          >
+            <i class="fa-solid fa-file-circle-check me-1 text-warning"></i> Paper + Solutions (PDF)
+          </a>
           <a
             href="{{ url_for('download_paper_zip', paper_id=paper.id) }}"
             class="btn btn-outline-dark rounded-pill px-3 py-2 fw-semibold small"
+            title="Download all pages of this paper as ZIP"
           >
-            <i class="fa-solid fa-download me-1"></i> Download All
+            <i class="fa-solid fa-download me-1"></i> This Paper (ZIP)
           </a>
-          <button
-            class="btn btn-dark rounded-pill px-3 py-2 fw-semibold small"
-            data-bs-toggle="modal"
-            data-bs-target="#uploadSolutionModal"
+          <a
+            href="{{ url_for('download_course_papers_zip', course_name=paper.course) }}"
+            class="btn btn-outline-dark rounded-pill px-3 py-2 fw-semibold small"
+            title="Download all question papers of {{ paper.course }} from all years together as ZIP"
           >
-            <i class="fa-solid fa-plus me-1"></i> Add Solution
-          </button>
+            <i class="fa-solid fa-box-archive text-primary me-1"></i> All {{ paper.course }} Papers ({{ course_total_papers }})
+          </a>
           <button
             class="btn btn-light text-danger rounded-circle p-2"
             data-bs-toggle="modal"
@@ -213,16 +237,14 @@ paper.exam_type }} {{ paper.year }}) - PYQ Vault{% endblock %} {% block content
   </div>
 
   <div id="solutions">
-    <div class="d-flex align-items-center justify-content-between mb-3">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
       <div>
         <h4 class="fw-bold mb-1 d-flex align-items-center gap-2">
           <span>Community Solutions</span>
-          <span class="badge bg-dark rounded-pill fs-6"
-            >{{ paper.solutions|length }}</span
-          >
+          <span class="badge bg-dark rounded-pill fs-6">{{ paper.solutions|length }}</span>
         </h4>
         <p class="text-secondary small mb-0">
-          Step-by-step solutions contributed by students and professors.
+          Solutions categorized by question number for quick reference and comparison.
         </p>
       </div>
       <button
@@ -235,220 +257,312 @@ paper.exam_type }} {{ paper.year }}) - PYQ Vault{% endblock %} {% block content
     </div>
 
     {% if paper.solutions %}
-    <div class="d-flex flex-column gap-3">
-      {% for sol in paper.solutions %}
-      <div class="card-pastel card-clean-white p-4">
-        <div
-          class="d-flex flex-wrap align-items-center justify-content-between gap-3 pb-3 border-bottom mb-3"
-        >
-          <div class="d-flex align-items-center gap-3">
-            <div
-              class="avatar-stack-item bg-dark text-white"
-              style="width: 40px; height: 40px; font-size: 1.1rem"
-            >
-              <i class="fa-solid fa-user-graduate"></i>
-            </div>
-            <div>
-              <div class="fw-bold text-dark">
-                {{ sol.contributor or 'Community Contributor' }}
-              </div>
-              <div class="text-muted smaller">
-                Submitted {{ sol.upload_date.strftime('%B %d, %Y') if
-                sol.upload_date else 'Recently' }}
-              </div>
-            </div>
-          </div>
+    <!-- Answered Questions Overview Bar -->
+    <div class="p-3 bg-white rounded-4 border mb-4 shadow-2xs">
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2.5 pb-2 border-bottom">
+        <div class="d-flex align-items-center gap-2">
+          <span class="badge bg-dark text-white rounded-pill px-3 py-1 small fw-bold">
+            <i class="fa-solid fa-list-check me-1.5 text-warning"></i>Answered Questions
+          </span>
+          <span class="text-secondary small fw-medium">
+            {{ answered_questions|length }} question{{ 's' if answered_questions|length != 1 else '' }} answered &bull; {{ paper.solutions|length }} total solution{{ 's' if paper.solutions|length != 1 else '' }}
+          </span>
+        </div>
+        <div class="d-flex align-items-center gap-3 smaller text-secondary">
+          <span class="d-flex align-items-center gap-1.5">
+            <span class="badge rounded-pill bg-light text-secondary border px-2 py-0.5">1</span> Single Answer
+          </span>
+          <span class="d-flex align-items-center gap-1.5">
+            <span class="badge rounded-pill bg-warning text-dark border px-2 py-0.5 fw-bold">2+</span> Multiple Answers
+          </span>
+        </div>
+      </div>
 
+      <div class="d-flex flex-wrap align-items-center gap-2 pt-0.5">
+        <button type="button" class="btn btn-sm btn-dark rounded-pill px-3 py-1.5 fw-bold q-filter-pill active" data-q-target="all">
+          All Questions ({{ paper.solutions|length }})
+        </button>
+        {% for item in answered_questions %}
+        <button type="button" class="btn btn-sm btn-outline-dark rounded-pill px-3 py-1.5 fw-semibold q-filter-pill d-inline-flex align-items-center gap-1.5" data-q-target="{{ item.q_num|lower|replace(' ', '-') }}">
+          <span>Question {{ item.q_num }}</span>
+          {% if item.has_multiple %}
+          <span class="badge rounded-pill bg-warning text-dark border smaller px-2 py-0.5 fw-bold" title="{{ item.count }} alternate answers available to compare">
+            {{ item.count }} Answers
+          </span>
+          {% else %}
+          <span class="badge rounded-pill bg-light text-secondary border smaller px-1.5 py-0.5">
+            1
+          </span>
+          {% endif %}
+        </button>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="d-flex flex-column gap-4" id="groupedSolutionsContainer">
+      {% for q_num, sol_list in grouped_solutions.items() %}
+      <div class="question-group-block" data-q-id="{{ q_num|lower|replace(' ', '-') }}">
+        <!-- Question Group Header -->
+        <div class="d-flex flex-wrap align-items-center justify-content-between p-3 rounded-4 bg-white border mb-3 shadow-2xs">
           <div class="d-flex align-items-center gap-2">
-            {% if sol.text_content and sol.pages %}
-            <span
-              class="badge rounded-pill bg-light text-dark border px-3 py-1.5 small fw-semibold"
-            >
-              <i class="fa-solid fa-pen-nib me-1 text-primary"></i> Typed + {{
-              sol.page_count }} Pages
+            <span class="badge bg-dark text-white rounded-pill px-3 py-1.5 fs-6 fw-bold">
+              <i class="fa-solid fa-hashtag me-1 text-warning"></i> Question {{ q_num }}
             </span>
-            {% elif sol.text_content %}
-            <span
-              class="badge rounded-pill bg-light text-dark border px-3 py-1.5 small fw-semibold"
-            >
-              <i class="fa-solid fa-pen-nib me-1 text-primary"></i> Typed
-              Solution
+            <span class="text-secondary small fw-medium">
+              {{ sol_list|length }} {{ 'solution available' if sol_list|length == 1 else 'solutions grouped together' }}
             </span>
-            {% else %}
-            <span
-              class="badge rounded-pill bg-light text-dark border px-3 py-1.5 small fw-semibold"
-            >
-              <i class="fa-solid fa-file-image me-1 text-primary"></i> {{
-              sol.page_count }} {{ 'Page' if sol.page_count == 1 else 'Pages' }}
-            </span>
-            {% endif %} {% if sol.text_content %}
-            <button
-              type="button"
-              class="btn btn-sm btn-light rounded-pill px-3"
-              onclick="copySolutionText('sol-text-{{ sol.id }}', this)"
-              title="Copy Solution"
-            >
-              <i class="fa-regular fa-copy me-1"></i> <span>Copy</span>
-            </button>
-            <a
-              href="{{ url_for('download_solution_text', solution_id=sol.id) }}"
-              class="btn btn-sm btn-outline-dark rounded-pill px-3"
-              title="Download Text (.txt)"
-            >
-              <i class="fa-solid fa-file-arrow-down me-1"></i> Text
-            </a>
-            {% endif %} {% if sol.pages %}
-            <a
-              href="{{ url_for('download_solution_zip', solution_id=sol.id) }}"
-              class="btn btn-sm btn-outline-dark rounded-pill px-3"
-            >
-              <i class="fa-solid fa-download me-1"></i> Download All
-            </a>
-            {% endif %}
-
-            <button
-              class="btn btn-sm btn-light text-danger rounded-circle p-2"
-              data-bs-toggle="modal"
-              data-bs-target="#deleteSolutionModal{{ sol.id }}"
-              title="Delete Solution"
-            >
-              <i class="fa-regular fa-trash-can"></i>
-            </button>
           </div>
+          {% if sol_list|length > 1 %}
+          <span class="badge bg-warning bg-opacity-25 text-dark rounded-pill px-3 py-1 small fw-semibold">
+            <i class="fa-solid fa-layer-group me-1"></i> {{ sol_list|length }} Answers Available to Compare
+          </span>
+          {% endif %}
         </div>
 
-        {% if sol.notes %}
-        <div class="p-3 rounded-4 bg-light text-secondary small mb-3 border">
-          <span class="fw-bold text-dark"
-            ><i class="fa-regular fa-comment-dots me-1 text-success"></i>
-            Notes:</span
-          >
-          {{ sol.notes }}
-        </div>
-        {% endif %} {% if sol.text_content %}
-        <div class="typed-solution-box p-4 rounded-4 mb-3 border">
-          <div
-            class="d-flex align-items-center justify-content-between mb-2 pb-2 border-bottom border-light-subtle"
-          >
-            <span
-              class="small fw-bold text-uppercase text-secondary d-flex align-items-center gap-1.5"
-            >
-              <i class="fa-solid fa-align-left text-dark"></i> Written Solution
-            </span>
-            <span class="text-muted smaller"
-              >{{ sol.text_content.split()|length }} words</span
-            >
-          </div>
-          <div class="typed-solution-text" id="sol-text-{{ sol.id }}">
-            {{ sol.text_content }}
-          </div>
-        </div>
-        {% endif %} {% if sol.pages %}
-        <div class="row g-3 align-items-center">
-          <div
-            class="col-md-9 text-center bg-dark bg-opacity-10 rounded-4 p-3 position-relative"
-          >
-            <img
-              src="{{ url_for('static', filename=sol.pages[0].file_path) }}"
-              id="sol-main-img-{{ sol.id }}"
-              alt="Solution Page"
-              class="img-fluid rounded-3 shadow-sm"
-              style="max-height: 480px; object-fit: contain"
-            />
-            <div class="mt-2 d-flex justify-content-center gap-2">
-              <a
-                href="{{ url_for('download_solution_page', solution_id=sol.id, page_id=sol.pages[0].id) }}"
-                id="sol-download-link-{{ sol.id }}"
-                class="btn btn-sm btn-light rounded-pill px-3"
-              >
-                <i class="fa-solid fa-download me-1"></i> Download Page
-              </a>
-              <button
-                type="button"
-                class="btn btn-sm btn-light rounded-pill px-3 zoom-sol-btn"
-                data-img-id="sol-main-img-{{ sol.id }}"
-              >
-                <i class="fa-solid fa-expand me-1"></i> Full View
-              </button>
-            </div>
-          </div>
-
-          <div class="col-md-3">
-            <div
-              class="d-flex flex-column gap-2 overflow-auto"
-              style="max-height: 480px"
-            >
-              {% for sp in sol.pages %}
-              <div
-                class="border rounded-4 p-2 cursor-pointer {% if loop.first %}border-dark shadow-sm bg-white{% else %}bg-light opacity-75{% endif %}"
-                onclick="switchSolutionPage('{{ sol.id }}', '{{ url_for('static', filename=sp.file_path) }}', '{{ url_for('download_solution_page', solution_id=sol.id, page_id=sp.id) }}', {{ loop.index }}, {{ sol.pages|length }}, this)"
-              >
-                <div class="d-flex align-items-center gap-2">
-                  <img
-                    src="{{ url_for('static', filename=sp.file_path) }}"
-                    alt="P{{ sp.page_number }}"
-                    class="rounded-3"
-                    style="width: 44px; height: 44px; object-fit: cover"
-                  />
-                  <div>
-                    <div class="fw-bold small text-dark">
-                      Page {{ sp.page_number }}
-                    </div>
-                    <div class="text-muted smaller">Click to view</div>
-                  </div>
-                </div>
-              </div>
+        {% if sol_list|length > 1 %}
+        <!-- Multi-Answer Switcher Tabs (Prevents clutter) -->
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3 p-2 bg-light rounded-4 border">
+          <div class="d-flex align-items-center gap-2">
+            <span class="smaller fw-bold text-secondary text-uppercase ms-1">Compare Answers:</span>
+            <ul class="nav nav-pills gap-1.5" id="pills-q-{{ q_num|lower|replace(' ', '-') }}" role="tablist">
+              {% for sol in sol_list %}
+              <li class="nav-item" role="presentation">
+                <button
+                  class="nav-link rounded-pill py-1 px-3 small fw-semibold {% if loop.first %}active{% endif %}"
+                  id="tab-btn-{{ sol.id }}"
+                  data-bs-toggle="pill"
+                  data-bs-target="#pane-sol-{{ sol.id }}"
+                  type="button"
+                  role="tab"
+                  aria-controls="pane-sol-{{ sol.id }}"
+                  aria-selected="{{ 'true' if loop.first else 'false' }}"
+                >
+                  <i class="fa-solid fa-user-graduate me-1 text-secondary"></i>
+                  <span>Answer #{{ loop.index }}</span>
+                  <span class="smaller opacity-75 ms-1">({{ sol.contributor or 'Scholar' }})</span>
+                </button>
+              </li>
               {% endfor %}
-            </div>
+            </ul>
           </div>
         </div>
         {% endif %}
-      </div>
 
-      <div
-        class="modal fade"
-        id="deleteSolutionModal{{ sol.id }}"
-        tabindex="-1"
-        aria-hidden="true"
-      >
-        <div class="modal-dialog modal-dialog-centered">
-          <div class="modal-content pastel-modal">
-            <div class="modal-body text-center p-4">
-              <div
-                class="avatar-stack-item mx-auto mb-3"
-                style="
-                  width: 56px;
-                  height: 56px;
-                  background: var(--pastel-pink);
-                  color: var(--pastel-pink-text);
-                  font-size: 1.3rem;
-                "
-              >
-                <i class="fa-regular fa-trash-can"></i>
+        <div class="{% if sol_list|length > 1 %}tab-content{% else %}d-flex flex-column gap-3 ps-md-2{% endif %}" id="pills-tabContent-{{ q_num|lower|replace(' ', '-') }}">
+          {% for sol in sol_list %}
+          <div
+            class="{% if sol_list|length > 1 %}tab-pane fade {% if loop.first %}show active{% endif %}{% endif %}"
+            id="pane-sol-{{ sol.id }}"
+            role="tabpanel"
+            aria-labelledby="tab-btn-{{ sol.id }}"
+          >
+          <div class="card-pastel card-clean-white p-4 border shadow-sm">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 pb-3 border-bottom mb-3">
+              <div class="d-flex align-items-center gap-3">
+                <div
+                  class="avatar-stack-item bg-dark text-white"
+                  style="width: 38px; height: 38px; font-size: 1rem"
+                >
+                  <i class="fa-solid fa-user-graduate"></i>
+                </div>
+                <div>
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="fw-bold text-dark">{{ sol.contributor or 'Community Contributor' }}</span>
+                    <span class="badge bg-light text-dark border rounded-pill px-2 py-0.5 smaller fw-semibold">
+                      Answer #{{ loop.index }}
+                    </span>
+                    {% if sol.solution_type == 'text' %}
+                    <span class="badge bg-info bg-opacity-10 text-primary rounded-pill px-2 py-0.5 smaller fw-bold">
+                      <i class="fa-solid fa-pen-nib me-1"></i>Text Answer
+                    </span>
+                    {% elif sol.solution_type == 'both' %}
+                    <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-2 py-0.5 smaller fw-bold">
+                      <i class="fa-solid fa-check-double me-1"></i>Text + Images
+                    </span>
+                    {% else %}
+                    <span class="badge bg-secondary bg-opacity-10 text-secondary rounded-pill px-2 py-0.5 smaller fw-bold">
+                      <i class="fa-solid fa-file-image me-1"></i>Handwritten
+                    </span>
+                    {% endif %}
+                  </div>
+                  <div class="text-muted smaller">
+                    Submitted {{ sol.upload_date.strftime('%B %d, %Y') if sol.upload_date else 'Recently' }}
+                  </div>
+                </div>
               </div>
-              <h4 class="fw-bold mb-2">Delete This Solution?</h4>
-              <p class="text-secondary small mb-4">
-                Are you sure you want to permanently delete this solution
-                submitted by <strong>{{ sol.contributor }}</strong>?
-              </p>
-              <form
-                action="{{ url_for('delete_solution', solution_id=sol.id) }}"
-                method="POST"
-                class="d-flex justify-content-center gap-2"
-              >
+
+              <div class="d-flex align-items-center gap-2">
+                {% if sol.pages %}
+                <span class="badge rounded-pill bg-light text-dark border px-3 py-1.5 small fw-semibold">
+                  <i class="fa-solid fa-file-image me-1 text-primary"></i> {{ sol.page_count }} {{ 'Page' if sol.page_count == 1 else 'Pages' }}
+                </span>
+                <a
+                  href="{{ url_for('download_solution_zip', solution_id=sol.id) }}"
+                  class="btn btn-sm btn-outline-dark rounded-pill px-3"
+                  title="Download all pages of this solution"
+                >
+                  <i class="fa-solid fa-download me-1"></i> Download Images
+                </a>
+                {% endif %}
+
+                {% if sol.text_content %}
                 <button
                   type="button"
-                  class="btn btn-light rounded-pill px-4"
-                  data-bs-dismiss="modal"
+                  class="btn btn-sm btn-light rounded-pill px-3 border"
+                  onclick="copySolutionText('sol-text-{{ sol.id }}', this)"
+                  title="Copy answer text to clipboard"
                 >
-                  Cancel
+                  <i class="fa-regular fa-copy me-1"></i> <span>Copy Text</span>
                 </button>
-                <button type="submit" class="btn btn-danger rounded-pill px-4">
-                  Delete Solution
+                <a
+                  href="{{ url_for('download_solution_text', solution_id=sol.id) }}"
+                  class="btn btn-sm btn-outline-dark rounded-pill px-3"
+                  title="Download text answer as .txt"
+                >
+                  <i class="fa-solid fa-file-arrow-down me-1"></i> TXT
+                </a>
+                {% endif %}
+
+                <button
+                  class="btn btn-sm btn-light text-danger rounded-circle p-2"
+                  data-bs-toggle="modal"
+                  data-bs-target="#deleteSolutionModal{{ sol.id }}"
+                  title="Delete Solution"
+                >
+                  <i class="fa-regular fa-trash-can"></i>
                 </button>
-              </form>
+              </div>
+            </div>
+
+            {% if sol.notes %}
+            <div class="p-3 rounded-4 bg-light text-secondary small mb-3 border">
+              <span class="fw-bold text-dark">
+                <i class="fa-regular fa-comment-dots me-1 text-success"></i> Notes:
+              </span>
+              {{ sol.notes }}
+            </div>
+            {% endif %}
+
+            {% if sol.text_content %}
+            <div class="p-3 rounded-4 bg-light border mb-3">
+              <div class="d-flex align-items-center justify-content-between pb-2 mb-2 border-bottom">
+                <span class="fw-bold small text-dark d-flex align-items-center gap-1.5">
+                  <i class="fa-solid fa-pen-fancy text-primary"></i> Written Solution:
+                </span>
+                <button
+                  type="button"
+                  class="btn btn-xs btn-link text-secondary text-decoration-none p-0 small"
+                  onclick="copySolutionText('sol-text-{{ sol.id }}', this)"
+                >
+                  <i class="fa-regular fa-copy me-1"></i><span>Copy answer</span>
+                </button>
+              </div>
+              <div class="solution-text-display font-monospace text-dark" id="sol-text-{{ sol.id }}" style="white-space: pre-wrap; word-break: break-word; font-size: 0.95rem; line-height: 1.65;">{{ sol.text_content }}</div>
+            </div>
+            {% endif %}
+
+            {% if sol.pages %}
+            <div class="row g-3 align-items-center">
+              <div class="col-md-9 text-center bg-dark bg-opacity-10 rounded-4 p-3 position-relative">
+                <img
+                  src="{{ url_for('static', filename=sol.pages[0].file_path) }}"
+                  id="sol-main-img-{{ sol.id }}"
+                  alt="Solution Page"
+                  class="img-fluid rounded-3 shadow-sm"
+                  style="max-height: 480px; object-fit: contain"
+                />
+                <div class="mt-2 d-flex justify-content-center gap-2">
+                  <a
+                    href="{{ url_for('download_solution_page', solution_id=sol.id, page_id=sol.pages[0].id) }}"
+                    id="sol-download-link-{{ sol.id }}"
+                    class="btn btn-sm btn-light rounded-pill px-3"
+                  >
+                    <i class="fa-solid fa-download me-1"></i> Download Page
+                  </a>
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-light rounded-pill px-3 zoom-sol-btn"
+                    data-img-id="sol-main-img-{{ sol.id }}"
+                  >
+                    <i class="fa-solid fa-expand me-1"></i> Full View
+                  </button>
+                </div>
+              </div>
+
+              <div class="col-md-3">
+                <div class="d-flex flex-column gap-2 overflow-auto" style="max-height: 480px">
+                  {% for sp in sol.pages %}
+                  <div
+                    class="border rounded-4 p-2 cursor-pointer {% if loop.first %}border-dark shadow-sm bg-white{% else %}bg-light opacity-75{% endif %}"
+                    onclick="switchSolutionPage('{{ sol.id }}', '{{ url_for('static', filename=sp.file_path) }}', '{{ url_for('download_solution_page', solution_id=sol.id, page_id=sp.id) }}', {{ loop.index }}, {{ sol.pages|length }}, this)"
+                  >
+                    <div class="d-flex align-items-center gap-2">
+                      <img
+                        src="{{ url_for('static', filename=sp.file_path) }}"
+                        alt="P{{ sp.page_number }}"
+                        class="rounded-3"
+                        style="width: 44px; height: 44px; object-fit: cover"
+                      />
+                      <div>
+                        <div class="fw-bold small text-dark">Page {{ sp.page_number }}</div>
+                        <div class="text-muted smaller">Click to view</div>
+                      </div>
+                    </div>
+                  </div>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+            {% endif %}
+          </div>
+
+          <div
+            class="modal fade"
+            id="deleteSolutionModal{{ sol.id }}"
+            tabindex="-1"
+            aria-hidden="true"
+          >
+            <div class="modal-dialog modal-dialog-centered">
+              <div class="modal-content pastel-modal">
+                <div class="modal-body text-center p-4">
+                  <div
+                    class="avatar-stack-item mx-auto mb-3"
+                    style="
+                      width: 56px;
+                      height: 56px;
+                      background: var(--pastel-pink);
+                      color: var(--pastel-pink-text);
+                      font-size: 1.3rem;
+                    "
+                  >
+                    <i class="fa-regular fa-trash-can"></i>
+                  </div>
+                  <h4 class="fw-bold mb-2">Delete This Solution?</h4>
+                  <p class="text-secondary small mb-4">
+                    Are you sure you want to permanently delete this solution for <strong>Question {{ sol.question_number or 'General' }}</strong> submitted by <strong>{{ sol.contributor }}</strong>?
+                  </p>
+                  <form
+                    action="{{ url_for('delete_solution', solution_id=sol.id) }}"
+                    method="POST"
+                    class="d-flex justify-content-center gap-2"
+                  >
+                    <button
+                      type="button"
+                      class="btn btn-light rounded-pill px-4"
+                      data-bs-dismiss="modal"
+                    >
+                      Cancel
+                    </button>
+                    <button type="submit" class="btn btn-danger rounded-pill px-4">
+                      Delete Solution
+                    </button>
+                  </form>
+                </div>
+              </div>
             </div>
           </div>
+          </div>
+          {% endfor %}
         </div>
       </div>
       {% endfor %}
@@ -471,8 +585,7 @@ paper.exam_type }} {{ paper.year }}) - PYQ Vault{% endblock %} {% block content
       <h4 class="fw-bold mb-2">No Solutions Uploaded Yet</h4>
       <p class="text-secondary small mb-4 col-md-6 mx-auto">
         Be the first hero to contribute answers and step-by-step solutions for
-        <strong>{{ paper.course }}</strong> ({{ paper.exam_type }} {{ paper.year
-        }}).
+        <strong>{{ paper.course }}</strong> ({{ paper.exam_type }} {{ paper.year }}).
       </p>
       <button
         class="btn btn-dark rounded-pill px-4 py-2.5 fw-semibold"
@@ -499,7 +612,7 @@ paper.exam_type }} {{ paper.year }}) - PYQ Vault{% endblock %} {% block content
           <span class="avatar-stack-item bg-dark text-white">
             <i class="fa-solid fa-check small"></i>
           </span>
-          <span>Submit Handwritten Solution for {{ paper.course }}</span>
+          <span>Submit Solution for {{ paper.course }}</span>
         </h5>
 
         <button
@@ -517,51 +630,101 @@ paper.exam_type }} {{ paper.year }}) - PYQ Vault{% endblock %} {% block content
         enctype="multipart/form-data"
       >
         <div class="modal-body p-4">
-          <!-- Contributor details -->
-          <div class="row g-3 mb-4">
-            <div class="col-md-6">
+          <!-- Question Number & Contributor details -->
+          <div class="row g-3 mb-3">
+            <div class="col-md-4">
+              <label
+                for="solQuestionNumber"
+                class="form-label fw-bold small text-secondary"
+              >
+                Question Number *
+              </label>
+              <input
+                type="text"
+                class="form-control rounded-4 py-2.5 px-3 border-light-subtle fw-bold"
+                id="solQuestionNumber"
+                name="question_number"
+                placeholder="e.g. 1, 2, or Full Paper"
+                value="1"
+                required
+              />
+            </div>
+
+            <div class="col-md-4">
               <label
                 for="solContributor"
                 class="form-label fw-bold small text-secondary"
               >
                 Your Name or Alias
               </label>
-
               <input
                 type="text"
                 class="form-control rounded-4 py-2.5 px-3 border-light-subtle"
                 id="solContributor"
                 name="contributor"
-                placeholder="e.g. Batch of 2025"
+                placeholder="e.g. Batch of 2026"
                 value="Community Scholar"
               />
             </div>
 
-            <div class="col-md-6">
+            <div class="col-md-4">
               <label
                 for="solNotes"
                 class="form-label fw-bold small text-secondary"
               >
-                Notes / Overview (Optional)
+                Notes (Optional)
               </label>
-
               <input
                 type="text"
                 class="form-control rounded-4 py-2.5 px-3 border-light-subtle"
                 id="solNotes"
                 name="notes"
-                placeholder="e.g. Detailed proofs for Section B included"
+                placeholder="e.g. Section B included"
               />
             </div>
           </div>
 
-          <!-- Handwritten solution images -->
-          <div id="uploadImagesSection">
+          <!-- Tabs for Text Answer vs Handwritten Files -->
+          <ul class="nav nav-pills nav-fill mb-3 p-1 bg-light rounded-4 border" id="solutionTypeNav">
+            <li class="nav-item">
+              <button class="nav-link active rounded-pill fw-bold py-2 small" id="textAnsTabBtn" type="button">
+                <i class="fa-solid fa-pen-nib me-1.5"></i> Type / Paste Text Answer
+              </button>
+            </li>
+            <li class="nav-item">
+              <button class="nav-link rounded-pill fw-bold py-2 small" id="fileAnsTabBtn" type="button">
+                <i class="fa-solid fa-camera me-1.5"></i> Handwritten Images / PDF
+              </button>
+            </li>
+          </ul>
+
+          <!-- Type / Paste text answer section -->
+          <div id="uploadTextSection">
+            <div class="mb-2">
+              <label for="solTextContent" class="form-label fw-bold small text-secondary">
+                Your Answer / Explanation *
+              </label>
+              <textarea
+                class="form-control rounded-4 p-3 border-light-subtle font-monospace"
+                id="solTextContent"
+                name="text_content"
+                rows="8"
+                placeholder="Type or paste your answer here...&#10;&#10;Steps, equations, proofs, or explanations. You don't need to upload any files!"
+              ></textarea>
+            </div>
+            <p class="text-muted smaller mb-0">
+              <i class="fa-solid fa-circle-check text-success me-1"></i>
+              Quick & simple: just type or paste text and click submit.
+            </p>
+          </div>
+
+          <!-- Handwritten solution images / PDF -->
+          <div id="uploadImagesSection" class="d-none">
             <div class="mb-3">
               <label
                 class="form-label fw-bold small text-secondary d-flex justify-content-between align-items-center"
               >
-                <span>Handwritten Solution Pages (PNG, JPG, WEBP)</span>
+                <span>Solution Pages (PNG, JPG, WEBP, or PDF)</span>
                 <span
                   class="badge rounded-pill bg-light text-dark border px-3"
                   id="solFileCountBadge"
@@ -577,7 +740,7 @@ paper.exam_type }} {{ paper.year }}) - PYQ Vault{% endblock %} {% block content
                   name="solution_files"
                   class="position-absolute top-0 start-0 w-100 h-100 opacity-0 cursor-pointer"
                   multiple
-                  accept="image/png, image/jpeg, image/webp"
+                  accept="image/png, image/jpeg, image/webp, application/pdf, .pdf"
                 />
 
                 <div class="py-3">
@@ -589,13 +752,11 @@ paper.exam_type }} {{ paper.year }}) - PYQ Vault{% endblock %} {% block content
                   </div>
 
                   <div class="fw-bold mb-1 small">
-                    Select or drag & drop handwritten pages
+                    Select or drag & drop handwritten pages or PDF
                   </div>
 
                   <div class="text-muted smaller">
-                    Upload photos or scans of your handwritten solutions. You
-                    can select multiple images and reorder them before
-                    submitting.
+                    Upload photos, scans, or PDF of your solution. You can select multiple images and reorder them.
                   </div>
                 </div>
               </div>
@@ -622,11 +783,6 @@ paper.exam_type }} {{ paper.year }}) - PYQ Vault{% endblock %} {% block content
               <div class="row g-2 preview-grid" id="solPreviews"></div>
             </div>
           </div>
-
-          <p class="text-muted smaller mt-3 mb-0">
-            <i class="fa-solid fa-circle-info me-1"></i>
-            Upload at least one image of your handwritten solution to submit.
-          </p>
         </div>
 
         <div class="modal-footer bg-light border-0 px-4 py-3">
@@ -643,7 +799,7 @@ paper.exam_type }} {{ paper.year }}) - PYQ Vault{% endblock %} {% block content
             class="btn btn-dark rounded-pill px-4 fw-bold"
             id="submitSolutionBtn"
           >
-            Submit Handwritten Solution
+            Submit Solution
           </button>
         </div>
       </form>

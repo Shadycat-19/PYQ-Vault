@@ -11,6 +11,9 @@ class Paper(db.Model):
     year = db.Column(db.Integer, nullable=False, index=True)
     exam_type = db.Column(db.String(50), nullable=False, index=True)
     upload_date = db.Column(db.DateTime, default=datetime.utcnow)
+    original_file_path = db.Column(db.String(300), nullable=True)
+    original_filename = db.Column(db.String(200), nullable=True)
+    file_type = db.Column(db.String(20), default='images')
     
     pages = db.relationship(
         'PaperPage',
@@ -49,6 +52,9 @@ class Paper(db.Model):
             'year': self.year,
             'exam_type': self.exam_type,
             'upload_date': self.upload_date.strftime('%Y-%m-%d %H:%M') if self.upload_date else '',
+            'original_file_path': self.original_file_path,
+            'original_filename': self.original_filename,
+            'file_type': self.file_type or 'images',
             'page_count': self.page_count,
             'solution_count': self.solution_count,
             'thumbnail': self.first_page_url
@@ -82,6 +88,7 @@ class Solution(db.Model):
     notes = db.Column(db.Text, nullable=True)
     solution_type = db.Column(db.String(20), default='images')
     text_content = db.Column(db.Text, nullable=True)
+    question_number = db.Column(db.String(50), nullable=True, default='1')
 
     pages = db.relationship(
         'SolutionPage',
@@ -116,6 +123,7 @@ class Solution(db.Model):
             'upload_date': self.upload_date.strftime('%b %d, %Y') if self.upload_date else '',
             'contributor': self.contributor,
             'notes': self.notes or '',
+            'question_number': self.question_number or 'General',
             'solution_type': self.solution_type or 'images',
             'text_content': self.text_content or '',
             'page_count': self.page_count,
