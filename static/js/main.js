@@ -4,7 +4,6 @@ document.addEventListener("DOMContentLoaded", function () {
   initPaperUploadFlow();
   initSolutionUploadFlow();
   initQuestionPillFilters();
-  initCourseBundleSearch();
 });
 
 function initLiveSearch() {
@@ -680,24 +679,6 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 
-function initCourseBundleSearch() {
-  const bundleSearchInput = document.getElementById("bundleSearchInput");
-  const bundleItems = document.querySelectorAll(".course-bundle-item");
-  if (!bundleSearchInput || !bundleItems.length) return;
-
-  bundleSearchInput.addEventListener("input", function () {
-    const q = bundleSearchInput.value.trim().toLowerCase();
-    bundleItems.forEach((item) => {
-      const courseName = item.getAttribute("data-course-name") || "";
-      if (!q || courseName.includes(q)) {
-        item.classList.remove("d-none");
-      } else {
-        item.classList.add("d-none");
-      }
-    });
-  });
-}
-
 window.copySolutionText = function (elementId, btn) {
   const textEl = document.getElementById(elementId);
   if (!textEl) return;
@@ -722,33 +703,3 @@ window.copySolutionText = function (elementId, btn) {
       console.error("Failed to copy text:", err);
     });
 };
-
-document.addEventListener("DOMContentLoaded", function () {
-  const guidelinesBtn = document.querySelector(".guidelines-toggle");
-  const guidelinesModalEl = document.getElementById("imageGuidelinesModal");
-  if (guidelinesBtn && guidelinesModalEl) {
-    guidelinesBtn.addEventListener("click", function (e) {
-      e.preventDefault();
-      const modal = bootstrap.Modal.getOrCreateInstance(guidelinesModalEl);
-      modal.show();
-    });
-  }
-});
-
-function initCourseBundleSearch() {
-  const bundleSearchInput = document.getElementById("bundleSearchInput");
-  const bundleItems = document.querySelectorAll(".course-bundle-item");
-  if (!bundleSearchInput || !bundleItems.length) return;
-
-  bundleSearchInput.addEventListener("input", function () {
-    const q = bundleSearchInput.value.trim().toLowerCase();
-    bundleItems.forEach((item) => {
-      const courseName = item.getAttribute("data-course-name") || "";
-      if (!q || courseName.includes(q)) {
-        item.classList.remove("d-none");
-      } else {
-        item.classList.add("d-none");
-      }
-    });
-  });
-}

@@ -32,10 +32,7 @@ A full-stack web application designed for students and educators to share, searc
 - **Simple Text Answer Upload**: Direct type/paste text answers without needing to scan or upload images. Includes 1-click clipboard copy and `.txt` file download.
 - **Handwritten & Multi-Page Solutions**: Upload handwritten image pages or PDF solutions with page reordering and thumbnail navigation.
 
-### 4. Course Papers Bundle Download
-- **All-Years Course Bundle**: One-click download of all question papers for any course across all available years in a neatly organized `.ZIP` archive with structured folders and manifest.
-
-### 5. Upload Flows & Duplicate Detection
+### 4. Upload Flows & Duplicate Detection
 - **Paper Uploader**:
   - Dynamic course autocomplete suggestions based on existing catalog.
   - Multi-format file uploader (PDF, DOCX, TXT, PNG, JPG, WEBP).
@@ -46,9 +43,8 @@ A full-stack web application designed for students and educators to share, searc
   - Quick question number selectors (Q1, Q2, Q3, Q4, Q5, Full Paper).
   - Contributor attribution and optional notes.
 
-### 6. Downloads & Cascade Deletions
+### 5. Downloads & Cascade Deletions
 - Download original files (.pdf, .docx, .txt) and compiled PDF documents.
-- Download all papers of a course across all years as a single `.ZIP`.
 - Download solution text files or full solution page archives.
 - Delete paper with cascade delete removing associated pages, original files, solutions, and disk files.
 

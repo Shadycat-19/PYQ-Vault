@@ -82,11 +82,6 @@
                 <div class="sidebar-group mb-2">
                     <div class="sidebar-group-title">RESOURCES</div>
                     <div class="sidebar-links-list">
-                        <button type="button" class="sidebar-nav-item border-0 bg-transparent w-100 text-start" data-bs-toggle="modal" data-bs-target="#courseBundlesModal">
-                            <i class="fa-solid fa-box-archive text-primary"></i>
-                            <span class="flex-grow-1">Course Bundles</span>
-                            <span class="sidebar-badge">{{ global_courses|length }}</span>
-                        </button>
                         <button type="button" class="sidebar-nav-item border-0 bg-transparent w-100 text-start guidelines-toggle" data-bs-toggle="modal" data-bs-target="#imageGuidelinesModal">
                             <i class="fa-regular fa-circle-question text-secondary"></i>
                             <span class="flex-grow-1">Upload Guidelines</span>
@@ -241,56 +236,6 @@
                         <a href="#" id="viewExistingPaperBtn" class="btn btn-outline-dark rounded-pill px-3">View Existing</a>
                         <button type="button" id="proceedAnywayBtn" class="btn btn-dark rounded-pill px-3 fw-bold">Proceed Anyway</button>
                     </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Course Bundles Modal -->
-    <div class="modal fade" id="courseBundlesModal" tabindex="-1" aria-labelledby="courseBundlesModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content pastel-modal">
-                <div class="modal-header pastel-header">
-                    <h5 class="modal-title fw-bold d-flex align-items-center gap-2" id="courseBundlesModalLabel">
-                        <span class="avatar-stack-item bg-dark text-white"><i class="fa-solid fa-box-archive small"></i></span>
-                        <span>Download Course Bundles (ZIP)</span>
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body p-4">
-                    <p class="text-secondary small mb-3">
-                        Download all question papers across all available years for any course bundled into a single ZIP archive.
-                    </p>
-                    <div class="mb-3">
-                        <div class="search-pill-box w-100">
-                            <i class="fa-solid fa-magnifying-glass text-secondary"></i>
-                            <input type="text" id="bundleSearchInput" placeholder="Search course by name..." autocomplete="off">
-                        </div>
-                    </div>
-                    <div class="course-bundles-scroll-area d-flex flex-column gap-2 p-1" style="max-height: 400px; overflow-y: auto; -webkit-overflow-scrolling: touch;">
-                        {% for c in global_courses %}
-                        <div class="p-3 rounded-4 bg-white border d-flex flex-row align-items-center justify-content-between course-bundle-item shadow-2xs" data-course-name="{{ c|lower }}">
-                            <div class="d-flex align-items-center gap-3">
-                                <div class="avatar-stack-item bg-light text-dark border" style="width: 38px; height: 38px; font-size: 0.95rem;">
-                                    <i class="fa-solid fa-folder"></i>
-                                </div>
-                                <div>
-                                    <div class="fw-bold text-dark fs-6">{{ c }}</div>
-                                    <div class="text-secondary smaller fw-medium">{{ global_course_counts.get(c, 1) }} {{ 'paper' if global_course_counts.get(c, 1) == 1 else 'papers' }} available</div>
-                                </div>
-                            </div>
-                            <a href="{{ url_for('download_course_papers_zip', course_name=c) }}" class="btn btn-sm btn-outline-dark rounded-pill px-3.5 py-1.5 fw-semibold d-inline-flex align-items-center gap-1.5">
-                                <i class="fa-solid fa-download"></i>
-                                <span>Download ZIP</span>
-                            </a>
-                        </div>
-                        {% else %}
-                        <div class="text-center py-4 text-secondary small">No courses available yet.</div>
-                        {% endfor %}
-                    </div>
-                </div>
-                <div class="modal-footer bg-light border-0 px-4 py-3">
-                    <button type="button" class="btn btn-dark rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>

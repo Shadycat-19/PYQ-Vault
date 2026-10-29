@@ -186,29 +186,6 @@ h1, h2, h3, h4, h5, h6, .display-heading {
 .dot-ct2 { background: #e09886; }     /* Soft pastel peach / rose */
 .dot-endsem { background: #7c98bf; }  /* Soft pastel slate blue */
 
-.course-bundles-scroll-area {
-    scrollbar-width: thin;
-    scrollbar-color: #cbd5e1 #f8fafc;
-}
-
-.course-bundles-scroll-area::-webkit-scrollbar {
-    width: 6px;
-}
-
-.course-bundles-scroll-area::-webkit-scrollbar-track {
-    background: #f8fafc;
-    border-radius: 8px;
-}
-
-.course-bundles-scroll-area::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 8px;
-}
-
-.course-bundles-scroll-area::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
-}
-
 .sidebar-label {
     font-size: 0.75rem;
     font-weight: 600;

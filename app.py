@@ -321,55 +321,24 @@ def create_app(test_config=None):
 
     @app.route('/paper/<int:paper_id>')
     def paper_detail(paper_id):
-        import re
         paper = db.get_or_404(Paper, paper_id)
 
-        def clean_q_label(raw):
-            r = (raw or '1').strip()
-            if not r or r.lower() in ('general', 'none'):
-                return '1'
-            if r.lower().startswith('question'):
-                r = r[8:].strip() or '1'
-            elif r.lower().startswith('q') and len(r) > 1 and r[1].isdigit():
-                r = r[1:].strip()
-            return r
-
+        # Basic grouping of solutions by question number (rushed implementation)
         grouped_solutions = {}
         for sol in paper.solutions:
-            q = clean_q_label(sol.question_number)
+            q = (sol.question_number or 'Question 1').strip()
             if q not in grouped_solutions:
                 grouped_solutions[q] = []
             grouped_solutions[q].append(sol)
 
-        def q_sort_key(key):
-            m = re.search(r'\d+', key)
-            if 'full' in key.lower() or 'all' in key.lower():
-                return (2, 999999, key)
-            if m:
-                return (0, int(m.group()), key)
-            return (1, 0, key)
-
-        sorted_keys = sorted(grouped_solutions.keys(), key=q_sort_key)
-        ordered_grouped = {k: grouped_solutions[k] for k in sorted_keys}
-
-        answered_questions = []
-        for k in sorted_keys:
-            sol_list = ordered_grouped[k]
-            answered_questions.append({
-                'q_num': k,
-                'count': len(sol_list),
-                'has_multiple': len(sol_list) > 1
-            })
-
-        course_total_papers = Paper.query.filter(Paper.course.ilike(paper.course)).count()
+        # Basic sort of question keys (string order: "10" comes before "2")
+        sorted_keys = sorted(grouped_solutions.keys())
 
         return render_template(
             'paper_detail.html',
             paper=paper,
-            grouped_solutions=ordered_grouped,
-            question_keys=sorted_keys,
-            answered_questions=answered_questions,
-            course_total_papers=course_total_papers
+            grouped_solutions=grouped_solutions,
+            question_keys=sorted_keys
         )
 
     @app.route('/paper/upload', methods=['POST'])
@@ -426,25 +395,6 @@ def create_app(test_config=None):
             new_paper.original_filename = secure_filename(first_file.filename)
             new_paper.file_type = 'pdf'
 
-            try:
-                pdf = pdfium.PdfDocument(orig_abs_path)
-                page_count = len(pdf)
-                for idx in range(page_count):
-                    page = pdf[idx]
-                    pil_img = page.render(scale=2.0).to_pil()
-                    page_name = f"paper_{new_paper.id}_p{idx+1}_{uuid.uuid4().hex[:8]}.png"
-                    page_path = os.path.join(app.config['PAPERS_UPLOAD_DIR'], page_name)
-                    pil_img.save(page_path, format='PNG')
-                    paper_page = PaperPage(
-                        paper_id=new_paper.id,
-                        file_path=f"uploads/papers/{page_name}",
-                        page_number=idx+1
-                    )
-                    db.session.add(paper_page)
-            except Exception as e:
-                app.logger.error(f"Error rendering PDF: {e}")
-                flash(f"Uploaded PDF saved, but encountered an issue previewing pages: {e}", 'warning')
-
         elif ext in ['docx', 'doc']:
             orig_name = f"paper_{new_paper.id}_original_{uuid.uuid4().hex[:8]}.{ext}"
             orig_abs_path = os.path.join(app.config['PAPERS_UPLOAD_DIR'], orig_name)
@@ -453,20 +403,6 @@ def create_app(test_config=None):
             new_paper.original_filename = secure_filename(first_file.filename)
             new_paper.file_type = 'docx'
 
-            lines = extract_docx_text(orig_abs_path)
-            title = f"{course} - {exam_type} ({year_int})"
-            pil_pages = render_text_to_page_images(lines, title=title)
-            for idx, pil_img in enumerate(pil_pages, 1):
-                page_name = f"paper_{new_paper.id}_p{idx}_{uuid.uuid4().hex[:8]}.png"
-                page_path = os.path.join(app.config['PAPERS_UPLOAD_DIR'], page_name)
-                pil_img.save(page_path, format='PNG')
-                paper_page = PaperPage(
-                    paper_id=new_paper.id,
-                    file_path=f"uploads/papers/{page_name}",
-                    page_number=idx
-                )
-                db.session.add(paper_page)
-
         elif ext == 'txt':
             orig_name = f"paper_{new_paper.id}_original_{uuid.uuid4().hex[:8]}.txt"
             orig_abs_path = os.path.join(app.config['PAPERS_UPLOAD_DIR'], orig_name)
@@ -474,25 +410,6 @@ def create_app(test_config=None):
             new_paper.original_file_path = f"uploads/papers/{orig_name}"
             new_paper.original_filename = secure_filename(first_file.filename)
             new_paper.file_type = 'txt'
-
-            try:
-                with open(orig_abs_path, 'r', encoding='utf-8', errors='ignore') as f:
-                    lines = f.readlines()
-            except Exception:
-                lines = ["Unable to decode text file."]
-
-            title = f"{course} - {exam_type} ({year_int})"
-            pil_pages = render_text_to_page_images(lines, title=title)
-            for idx, pil_img in enumerate(pil_pages, 1):
-                page_name = f"paper_{new_paper.id}_p{idx}_{uuid.uuid4().hex[:8]}.png"
-                page_path = os.path.join(app.config['PAPERS_UPLOAD_DIR'], page_name)
-                pil_img.save(page_path, format='PNG')
-                paper_page = PaperPage(
-                    paper_id=new_paper.id,
-                    file_path=f"uploads/papers/{page_name}",
-                    page_number=idx
-                )
-                db.session.add(paper_page)
 
         else:
             new_paper.file_type = 'images'
@@ -511,7 +428,7 @@ def create_app(test_config=None):
                 db.session.add(paper_page)
 
         db.session.commit()
-        flash(f"Question Paper for '{course}' ({exam_type} {year_int}) uploaded successfully with {new_paper.page_count} page(s)!", 'success')
+        flash(f"Question Paper for '{course}' ({exam_type} {year_int}) uploaded successfully!", 'success')
         return redirect(url_for('paper_detail', paper_id=new_paper.id))
 
     @app.route('/paper/<int:paper_id>/solution/upload', methods=['POST'])
@@ -789,14 +706,8 @@ def create_app(test_config=None):
             draw.text((90, height - 90), "Generated by PYQ Vault — Past Papers & Solutions Archive", fill=(148, 163, 184), font=f_body)
             all_pil_images.append(cover)
 
-            # Sort solutions by question number so they appear in order
-            def sol_sort_key(s):
-                m = re.search(r'\d+', s.question_number or '1')
-                if m:
-                    return (0, int(m.group()))
-                return (1, 0)
-            
-            sorted_sols = sorted(paper.solutions, key=sol_sort_key)
+            # Basic sort of solutions by question number string
+            sorted_sols = sorted(paper.solutions, key=lambda s: str(s.question_number or '1'))
 
             for sol in sorted_sols:
                 q_label = sol.question_number or '1'
@@ -872,75 +783,6 @@ def create_app(test_config=None):
 
         memory_file.seek(0)
         zip_filename = f"{secure_filename(paper.course)}_{paper.exam_type}_{paper.year}_full_paper.zip"
-        return send_file(
-            memory_file,
-            mimetype='application/zip',
-            as_attachment=True,
-            download_name=zip_filename
-        )
-
-    @app.route('/course/<path:course_name>/download-all')
-    def download_course_papers_zip(course_name):
-        clean_course = unquote(course_name).strip()
-        papers = Paper.query.filter(Paper.course.ilike(clean_course)).order_by(Paper.year.desc(), Paper.exam_type).all()
-
-        if not papers:
-            flash(f"No papers found for course '{clean_course}'.", 'warning')
-            return redirect(url_for('index'))
-
-        safe_course = secure_filename(clean_course) or "course_papers"
-        memory_file = io.BytesIO()
-
-        with zipfile.ZipFile(memory_file, 'w', zipfile.ZIP_DEFLATED) as zf:
-            manifest_lines = [
-                f"PYQ Vault Course Archive: {clean_course}",
-                f"Generated at: {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}",
-                f"Total Question Papers: {len(papers)}",
-                "=" * 50,
-                ""
-            ]
-
-            for paper in papers:
-                folder_name = f"{paper.year}_{secure_filename(paper.exam_type)}"
-                manifest_lines.append(f"Paper: {paper.course} ({paper.exam_type} {paper.year})")
-                manifest_lines.append(f"  - Pages: {paper.page_count}")
-                manifest_lines.append(f"  - Solutions: {paper.solution_count}")
-                manifest_lines.append("")
-
-                if paper.original_file_path:
-                    clean_rel = paper.original_file_path.replace('static/', '', 1) if paper.original_file_path.startswith('static/') else paper.original_file_path
-                    orig_abs = os.path.join(app.root_path, 'static', clean_rel)
-                    if os.path.exists(orig_abs):
-                        orig_ext = orig_abs.rsplit('.', 1)[-1]
-                        arc_name = f"{safe_course}/{folder_name}/{paper.original_filename or f'paper_{paper.id}_original.{orig_ext}'}"
-                        zf.write(orig_abs, arcname=arc_name)
-
-                for page in paper.pages:
-                    clean_rel = page.file_path.replace('static/', '', 1) if page.file_path.startswith('static/') else page.file_path
-                    abs_path = os.path.join(app.root_path, 'static', clean_rel)
-                    if os.path.exists(abs_path):
-                        ext = abs_path.rsplit('.', 1)[-1]
-                        arc_name = f"{safe_course}/{folder_name}/pages/{safe_course}_{paper.exam_type}_{paper.year}_page_{page.page_number:02d}.{ext}"
-                        zf.write(abs_path, arcname=arc_name)
-
-                for sol in paper.solutions:
-                    q_slug = secure_filename(sol.question_number or 'general')
-                    if sol.text_content:
-                        txt_arc = f"{safe_course}/{folder_name}/solutions/Q_{q_slug}_sol_{sol.id}.txt"
-                        zf.writestr(txt_arc, f"Course: {paper.course}\nExam: {paper.exam_type} ({paper.year})\nQuestion: {sol.question_number}\nContributor: {sol.contributor}\nNotes: {sol.notes or 'None'}\n\nSolution Content:\n{sol.text_content}\n")
-
-                    for sp in sol.pages:
-                        clean_rel = sp.file_path.replace('static/', '', 1) if sp.file_path.startswith('static/') else sp.file_path
-                        sp_abs = os.path.join(app.root_path, 'static', clean_rel)
-                        if os.path.exists(sp_abs):
-                            ext = sp_abs.rsplit('.', 1)[-1]
-                            sp_arc = f"{safe_course}/{folder_name}/solutions/Q_{q_slug}_sol_{sol.id}_page_{sp.page_number:02d}.{ext}"
-                            zf.write(sp_abs, arcname=sp_arc)
-
-            zf.writestr(f"{safe_course}/README.txt", "\n".join(manifest_lines))
-
-        memory_file.seek(0)
-        zip_filename = f"{safe_course}_all_years_papers.zip"
         return send_file(
             memory_file,
             mimetype='application/zip',

@@ -36,10 +36,13 @@ paper.exam_type }} {{ paper.year }}) - PYQ Vault{% endblock %} {% block content
         </div>
         <h2 class="display-6 fw-bold mb-2 text-dark">{{ paper.course }}</h2>
         <div class="d-flex align-items-center gap-4 text-secondary small">
-          <span
-            ><i class="fa-regular fa-file-lines me-1 text-primary"></i
-            ><strong>{{ paper.page_count }}</strong> Pages</span
-          >
+          {% if paper.file_type == 'pdf' or (paper.original_file_path and paper.original_file_path.endswith('.pdf')) %}
+          <span><i class="fa-solid fa-file-pdf me-1 text-danger"></i><strong>PDF Document</strong></span>
+          {% elif paper.file_type in ['docx', 'doc'] or (paper.original_file_path and paper.original_file_path.endswith('.docx')) %}
+          <span><i class="fa-solid fa-file-word me-1 text-primary"></i><strong>Word Document (.docx)</strong></span>
+          {% else %}
+          <span><i class="fa-regular fa-file-lines me-1 text-primary"></i><strong>{{ paper.page_count }}</strong> Pages</span>
+          {% endif %}
           <a href="#solutions" class="text-decoration-none text-secondary"
             ><i class="fa-solid fa-lightbulb me-1 text-success"></i
             ><strong>{{ paper.solution_count }}</strong> Community
@@ -50,7 +53,7 @@ paper.exam_type }} {{ paper.year }}) - PYQ Vault{% endblock %} {% block content
 
       <div class="col-lg-5 text-lg-end">
         <div class="d-flex flex-wrap justify-content-lg-end gap-2 align-items-center">
-          {% if paper.original_file_path and paper.original_file_path.endswith('.docx') %}
+          {% if paper.file_type in ['docx', 'doc'] or (paper.original_file_path and paper.original_file_path.endswith('.docx')) %}
           <a
             href="{{ url_for('download_original_paper', paper_id=paper.id) }}"
             class="btn btn-outline-primary rounded-pill px-3 py-2 fw-semibold small"
@@ -59,6 +62,7 @@ paper.exam_type }} {{ paper.year }}) - PYQ Vault{% endblock %} {% block content
             <i class="fa-solid fa-file-word me-1"></i> DOCX
           </a>
           {% endif %}
+          {% if paper.file_type == 'pdf' or (paper.original_file_path and paper.original_file_path.endswith('.pdf')) or paper.pages %}
           <a
             href="{{ url_for('download_paper_pdf', paper_id=paper.id) }}"
             class="btn btn-outline-danger rounded-pill px-3 py-2 fw-semibold small"
@@ -66,6 +70,8 @@ paper.exam_type }} {{ paper.year }}) - PYQ Vault{% endblock %} {% block content
           >
             <i class="fa-solid fa-file-pdf me-1"></i> PDF
           </a>
+          {% endif %}
+          {% if paper.solutions %}
           <a
             href="{{ url_for('download_paper_with_solutions_pdf', paper_id=paper.id) }}"
             class="btn btn-dark rounded-pill px-3 py-2 fw-semibold small shadow-2xs"
@@ -73,6 +79,8 @@ paper.exam_type }} {{ paper.year }}) - PYQ Vault{% endblock %} {% block content
           >
             <i class="fa-solid fa-file-circle-check me-1 text-warning"></i> Paper + Solutions (PDF)
           </a>
+          {% endif %}
+          {% if paper.pages %}
           <a
             href="{{ url_for('download_paper_zip', paper_id=paper.id) }}"
             class="btn btn-outline-dark rounded-pill px-3 py-2 fw-semibold small"
@@ -80,13 +88,7 @@ paper.exam_type }} {{ paper.year }}) - PYQ Vault{% endblock %} {% block content
           >
             <i class="fa-solid fa-download me-1"></i> This Paper (ZIP)
           </a>
-          <a
-            href="{{ url_for('download_course_papers_zip', course_name=paper.course) }}"
-            class="btn btn-outline-dark rounded-pill px-3 py-2 fw-semibold small"
-            title="Download all question papers of {{ paper.course }} from all years together as ZIP"
-          >
-            <i class="fa-solid fa-box-archive text-primary me-1"></i> All {{ paper.course }} Papers ({{ course_total_papers }})
-          </a>
+          {% endif %}
           <button
             class="btn btn-light text-danger rounded-circle p-2"
             data-bs-toggle="modal"
@@ -100,6 +102,75 @@ paper.exam_type }} {{ paper.year }}) - PYQ Vault{% endblock %} {% block content
     </div>
   </div>
 
+  {% if paper.file_type == 'pdf' or (paper.original_file_path and paper.original_file_path.endswith('.pdf')) %}
+  <div class="card-pastel card-clean-white p-4">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3 pb-3 border-bottom">
+      <div class="d-flex align-items-center gap-3">
+        <h5 class="fw-bold mb-0 text-dark">
+          <i class="fa-solid fa-file-pdf text-danger me-2"></i>Question Paper (PDF)
+        </h5>
+        <span class="badge rounded-pill bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-3 py-1">
+          PDF Document
+        </span>
+      </div>
+      <div>
+        <a href="{{ url_for('download_paper_pdf', paper_id=paper.id) }}" class="btn btn-sm btn-dark rounded-pill px-3">
+          <i class="fa-solid fa-download me-1"></i> Download PDF
+        </a>
+      </div>
+    </div>
+    <div class="rounded-3 overflow-hidden border bg-light" style="height: 720px;">
+      <iframe src="{{ url_for('static', filename=paper.original_file_path) }}" width="100%" height="100%" style="border: none;"></iframe>
+    </div>
+  </div>
+
+  {% elif paper.file_type in ['docx', 'doc'] or (paper.original_file_path and paper.original_file_path.endswith('.docx')) %}
+  <div class="card-pastel card-clean-white p-4">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3 pb-3 border-bottom">
+      <div class="d-flex align-items-center gap-3">
+        <h5 class="fw-bold mb-0 text-dark">
+          <i class="fa-solid fa-file-word text-primary me-2"></i>Question Paper (Word DOCX)
+        </h5>
+        <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-1">
+          Word Document
+        </span>
+      </div>
+    </div>
+    <div class="text-center py-5 bg-light rounded-4 border">
+      <div class="avatar-stack-item mx-auto mb-3" style="width: 68px; height: 68px; background: #e8f0fe; color: #1a73e8; font-size: 2rem;">
+        <i class="fa-solid fa-file-word"></i>
+      </div>
+      <h5 class="fw-bold mb-1 text-dark">{{ paper.original_filename or 'Question Paper (.docx)' }}</h5>
+      <p class="text-secondary small mb-4">Uploaded as a Microsoft Word document. Download to view the original file.</p>
+      <a href="{{ url_for('download_original_paper', paper_id=paper.id) }}" class="btn btn-primary rounded-pill px-4 py-2 fw-semibold">
+        <i class="fa-solid fa-download me-1.5"></i> Download Word Document (.docx)
+      </a>
+    </div>
+  </div>
+
+  {% elif paper.file_type == 'txt' or (paper.original_file_path and paper.original_file_path.endswith('.txt')) %}
+  <div class="card-pastel card-clean-white p-4">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3 pb-3 border-bottom">
+      <div class="d-flex align-items-center gap-3">
+        <h5 class="fw-bold mb-0 text-dark">
+          <i class="fa-solid fa-file-lines text-secondary me-2"></i>Question Paper (Text)
+        </h5>
+        <span class="badge rounded-pill bg-light text-dark border px-3 py-1">
+          TXT File
+        </span>
+      </div>
+      <div>
+        <a href="{{ url_for('download_original_paper', paper_id=paper.id) }}" class="btn btn-sm btn-dark rounded-pill px-3">
+          <i class="fa-solid fa-download me-1"></i> Download TXT
+        </a>
+      </div>
+    </div>
+    <div class="p-3 bg-light rounded-4 border">
+      <iframe src="{{ url_for('static', filename=paper.original_file_path) }}" width="100%" height="450px" style="border: none;"></iframe>
+    </div>
+  </div>
+
+  {% else %}
   <div class="card-pastel card-clean-white p-4">
     <div
       class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3 pb-3 border-bottom"
@@ -235,6 +306,7 @@ paper.exam_type }} {{ paper.year }}) - PYQ Vault{% endblock %} {% block content
       </div>
     </div>
   </div>
+  {% endif %}
 
   <div id="solutions">
     <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
@@ -257,105 +329,22 @@ paper.exam_type }} {{ paper.year }}) - PYQ Vault{% endblock %} {% block content
     </div>
 
     {% if paper.solutions %}
-    <!-- Answered Questions Overview Bar -->
-    <div class="p-3 bg-white rounded-4 border mb-4 shadow-2xs">
-      <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2.5 pb-2 border-bottom">
-        <div class="d-flex align-items-center gap-2">
-          <span class="badge bg-dark text-white rounded-pill px-3 py-1 small fw-bold">
-            <i class="fa-solid fa-list-check me-1.5 text-warning"></i>Answered Questions
-          </span>
-          <span class="text-secondary small fw-medium">
-            {{ answered_questions|length }} question{{ 's' if answered_questions|length != 1 else '' }} answered &bull; {{ paper.solutions|length }} total solution{{ 's' if paper.solutions|length != 1 else '' }}
-          </span>
-        </div>
-        <div class="d-flex align-items-center gap-3 smaller text-secondary">
-          <span class="d-flex align-items-center gap-1.5">
-            <span class="badge rounded-pill bg-light text-secondary border px-2 py-0.5">1</span> Single Answer
-          </span>
-          <span class="d-flex align-items-center gap-1.5">
-            <span class="badge rounded-pill bg-warning text-dark border px-2 py-0.5 fw-bold">2+</span> Multiple Answers
-          </span>
-        </div>
-      </div>
-
-      <div class="d-flex flex-wrap align-items-center gap-2 pt-0.5">
-        <button type="button" class="btn btn-sm btn-dark rounded-pill px-3 py-1.5 fw-bold q-filter-pill active" data-q-target="all">
-          All Questions ({{ paper.solutions|length }})
-        </button>
-        {% for item in answered_questions %}
-        <button type="button" class="btn btn-sm btn-outline-dark rounded-pill px-3 py-1.5 fw-semibold q-filter-pill d-inline-flex align-items-center gap-1.5" data-q-target="{{ item.q_num|lower|replace(' ', '-') }}">
-          <span>Question {{ item.q_num }}</span>
-          {% if item.has_multiple %}
-          <span class="badge rounded-pill bg-warning text-dark border smaller px-2 py-0.5 fw-bold" title="{{ item.count }} alternate answers available to compare">
-            {{ item.count }} Answers
-          </span>
-          {% else %}
-          <span class="badge rounded-pill bg-light text-secondary border smaller px-1.5 py-0.5">
-            1
-          </span>
-          {% endif %}
-        </button>
-        {% endfor %}
-      </div>
-    </div>
-
     <div class="d-flex flex-column gap-4" id="groupedSolutionsContainer">
-      {% for q_num, sol_list in grouped_solutions.items() %}
-      <div class="question-group-block" data-q-id="{{ q_num|lower|replace(' ', '-') }}">
+      {% for q_num in question_keys %}
+      {% set sol_list = grouped_solutions[q_num] %}
+      <div class="question-group-block">
         <!-- Question Group Header -->
-        <div class="d-flex flex-wrap align-items-center justify-content-between p-3 rounded-4 bg-white border mb-3 shadow-2xs">
-          <div class="d-flex align-items-center gap-2">
-            <span class="badge bg-dark text-white rounded-pill px-3 py-1.5 fs-6 fw-bold">
-              <i class="fa-solid fa-hashtag me-1 text-warning"></i> Question {{ q_num }}
-            </span>
-            <span class="text-secondary small fw-medium">
-              {{ sol_list|length }} {{ 'solution available' if sol_list|length == 1 else 'solutions grouped together' }}
-            </span>
-          </div>
-          {% if sol_list|length > 1 %}
-          <span class="badge bg-warning bg-opacity-25 text-dark rounded-pill px-3 py-1 small fw-semibold">
-            <i class="fa-solid fa-layer-group me-1"></i> {{ sol_list|length }} Answers Available to Compare
+        <div class="p-2.5 px-3 rounded-3 bg-light border mb-3 d-flex align-items-center justify-content-between">
+          <span class="fw-bold text-dark">
+            <i class="fa-solid fa-circle-question me-1.5 text-secondary"></i> Question: {{ q_num }}
           </span>
-          {% endif %}
+          <span class="badge bg-secondary text-white rounded-pill px-2.5 py-1 smaller">
+            {{ sol_list|length }} {{ 'answer' if sol_list|length == 1 else 'answers' }}
+          </span>
         </div>
 
-        {% if sol_list|length > 1 %}
-        <!-- Multi-Answer Switcher Tabs (Prevents clutter) -->
-        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3 p-2 bg-light rounded-4 border">
-          <div class="d-flex align-items-center gap-2">
-            <span class="smaller fw-bold text-secondary text-uppercase ms-1">Compare Answers:</span>
-            <ul class="nav nav-pills gap-1.5" id="pills-q-{{ q_num|lower|replace(' ', '-') }}" role="tablist">
-              {% for sol in sol_list %}
-              <li class="nav-item" role="presentation">
-                <button
-                  class="nav-link rounded-pill py-1 px-3 small fw-semibold {% if loop.first %}active{% endif %}"
-                  id="tab-btn-{{ sol.id }}"
-                  data-bs-toggle="pill"
-                  data-bs-target="#pane-sol-{{ sol.id }}"
-                  type="button"
-                  role="tab"
-                  aria-controls="pane-sol-{{ sol.id }}"
-                  aria-selected="{{ 'true' if loop.first else 'false' }}"
-                >
-                  <i class="fa-solid fa-user-graduate me-1 text-secondary"></i>
-                  <span>Answer #{{ loop.index }}</span>
-                  <span class="smaller opacity-75 ms-1">({{ sol.contributor or 'Scholar' }})</span>
-                </button>
-              </li>
-              {% endfor %}
-            </ul>
-          </div>
-        </div>
-        {% endif %}
-
-        <div class="{% if sol_list|length > 1 %}tab-content{% else %}d-flex flex-column gap-3 ps-md-2{% endif %}" id="pills-tabContent-{{ q_num|lower|replace(' ', '-') }}">
+        <div class="d-flex flex-column gap-3">
           {% for sol in sol_list %}
-          <div
-            class="{% if sol_list|length > 1 %}tab-pane fade {% if loop.first %}show active{% endif %}{% endif %}"
-            id="pane-sol-{{ sol.id }}"
-            role="tabpanel"
-            aria-labelledby="tab-btn-{{ sol.id }}"
-          >
           <div class="card-pastel card-clean-white p-4 border shadow-sm">
             <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 pb-3 border-bottom mb-3">
               <div class="d-flex align-items-center gap-3">
@@ -560,7 +549,6 @@ paper.exam_type }} {{ paper.year }}) - PYQ Vault{% endblock %} {% block content
                 </div>
               </div>
             </div>
-          </div>
           </div>
           {% endfor %}
         </div>

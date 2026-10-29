@@ -46,9 +46,11 @@
                                         <i class="fa-solid fa-file-word"></i> DOCX
                                     </span>
                                 {% endif %}
+                                {% if paper.pages %}
                                 <span class="badge bg-white bg-opacity-80 text-dark rounded-pill px-2.5 py-1 small fw-bold">
                                     {{ paper.page_count }} {{ 'Page' if paper.page_count == 1 else 'Pages' }}
                                 </span>
+                                {% endif %}
                             </div>
                         </div>
 
